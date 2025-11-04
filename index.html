@@ -768,7 +768,7 @@
             config: null,
             lastSync: null
         };
-        let autoBackup = {
+        let autoBackupConfig = {
             enabled: true,
             interval: 3600000, // هر ساعت
             lastBackup: null
@@ -792,7 +792,7 @@
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
-            link.download = `elishoes-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = 'elishoes-backup-' + new Date().toISOString().split('T')[0] + '.json';
             link.click();
             
             showToast('فایل پشتیبان با موفقیت دانلود شد');
@@ -853,7 +853,7 @@
         
         // تابع ایجاد پشتیبان محلی
         function createBackup() {
-            const timestamp = new Date().toLocaleString('fa-IR');
+            const timestamp = new Date().toISOString();
             const backup = {
                 products: products,
                 entryInvoices: entryInvoices,
@@ -871,7 +871,7 @@
             const backupSize = JSON.stringify(backup).length;
             const sizeKB = (backupSize / 1024).toFixed(2);
             
-            showToast(`پشتیبان محلی ایجاد شد (${sizeKB} KB)`);
+            showToast('پشتیبان محلی ایجاد شد (' + sizeKB + ' KB)');
             updateSystemInfo();
         }
         
@@ -1000,18 +1000,18 @@
         // بهبود LocalStorage
         function setupLocalStorageBackup() {
             // فعال‌سازی backup خودکار
-            autoBackup.enabled = true;
-            autoBackup.lastBackup = new Date().toISOString();
+            autoBackupConfig.enabled = true;
+            autoBackupConfig.lastBackup = new Date().toISOString();
             
             // ذخیره تنظیمات
-            localStorage.setItem('elishoes_autobackup', JSON.stringify(autoBackup));
+            localStorage.setItem('elishoes_autobackup', JSON.stringify(autoBackupConfig));
             
             // شروع backup خودکار
             setInterval(() => {
-                if (autoBackup.enabled) {
+                if (autoBackupConfig.enabled) {
                     createBackup();
                 }
-            }, autoBackup.interval);
+            }, autoBackupConfig.interval);
             
             cloudSync.enabled = true;
             cloudSync.provider = 'localStorage';
@@ -1033,7 +1033,7 @@
                 const config = JSON.parse(savedConfig);
                 if (config.enabled && config.provider) {
                     statusEl.className = 'sync-status online';
-                    statusEl.textContent = `وضعیت همگام‌سازی: آنلاین (${getProviderName(config.provider)})`;
+                    statusEl.textContent = 'وضعیت همگام‌سازی: آنلاین (' + getProviderName(config.provider) + ')';
                     return;
                 }
             }
@@ -1604,14 +1604,14 @@
         
         // تابع backup خودکار
         function autoBackup() {
-            if (autoBackup.enabled) {
+            if (autoBackupConfig.enabled) {
                 const now = new Date().getTime();
-                const lastBackup = autoBackup.lastBackup ? new Date(autoBackup.lastBackup).getTime() : 0;
+                const lastBackup = autoBackupConfig.lastBackup ? new Date(autoBackupConfig.lastBackup).getTime() : 0;
                 
-                if (now - lastBackup >= autoBackup.interval) {
+                if (now - lastBackup >= autoBackupConfig.interval) {
                     createBackup();
-                    autoBackup.lastBackup = now.toISOString();
-                    localStorage.setItem('elishoes_autobackup', JSON.stringify(autoBackup));
+                    autoBackupConfig.lastBackup = now.toISOString();
+                    localStorage.setItem('elishoes_autobackup', JSON.stringify(autoBackupConfig));
                 }
             }
         }
@@ -2084,19 +2084,19 @@
             const savedBackup = localStorage.getItem('elishoes_autobackup');
             if (savedBackup) {
                 try {
-                    autoBackup = { ...autoBackup, ...JSON.parse(savedBackup) };
+                    autoBackupConfig = { ...autoBackupConfig, ...JSON.parse(savedBackup) };
                 } catch (e) {
                     console.error('خطا در بارگذاری تنظیمات backup:', e);
                 }
             }
             
             // شروع backup خودکار اگر فعال باشد
-            if (autoBackup.enabled) {
+            if (autoBackupConfig.enabled) {
                 setInterval(() => {
-                    if (autoBackup.enabled) {
+                    if (autoBackupConfig.enabled) {
                         createBackup();
                     }
-                }, autoBackup.interval);
+                }, autoBackupConfig.interval);
             }
             
             renderEntryInvoices();

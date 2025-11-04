@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+<div id="sync-status">Test</div>
+<script>
+// Test basic functionality
+function testFunction() {
+    console.log("Test function working");
+    const el = document.getElementById('sync-status');
+    if (el) {
+        el.textContent = "Function works!";
+        console.log("Element found and updated");
+    } else {
+        console.log("Element not found");
+    }
+}
+testFunction();
+</script>
+</body>
+</html>
