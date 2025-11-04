@@ -740,8 +740,22 @@
                     <button class="btn btn-info" onclick="setupLocalStorageBackup()">💾 LocalStorage Enhanced</button>
                 </div>
                 <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
-                    💡 <strong>راهنما:</strong> برای همگام‌سازی بین دستگاه‌ها، یکی از گزینه‌های بالا را انتخاب کنید. 
+                    💡 <strong>راهنما:</strong> برای همگام‌سازی بین دستیاه‌ها، یکی از گزینه‌های بالا را انتخاب کنید. 
                     Firebase و Supabase رایگان هستند و نیاز به ثبت‌نام دارند.
+                </p>
+            </div>
+
+            <!-- بخش همگام‌سازی گیت هاب -->
+            <div class="data-management" id="github-sync-section" style="display: none;">
+                <h3>🔗 همگام‌سازی GitHub</h3>
+                <p>لطفاً دکمه‌های زیر را برای همگام‌سازی داده‌ها با GitHub استفاده کنید:</p>
+                <div class="cloud-options">
+                    <button class="btn btn-primary" onclick="syncToGitHub()">⬆️ ارسال به GitHub</button>
+                    <button class="btn btn-success" onclick="syncFromGitHub()">⬇️ دریافت از GitHub</button>
+                </div>
+                <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+                    💡 <strong>نکته:</strong> قبل از استفاده، GitHub را تنظیم کنید. 
+                    "ارسال به GitHub" اطلاعات فعلی را ذخیره می‌کند و "دریافت از GitHub" اطلاعات سرور را بارگیری می‌کند.
                 </p>
             </div>
         </div>
@@ -849,6 +863,67 @@
                 }
             };
             reader.readAsText(file);
+        }
+        
+        // توابع دسترسی به داده برای همگام‌سازی
+        function getInventory() {
+            return JSON.parse(localStorage.getItem('products')) || [];
+        }
+        
+        function getSales151() {
+            return JSON.parse(localStorage.getItem('entryInvoices')) || [];
+        }
+        
+        function getSales168() {
+            return JSON.parse(localStorage.getItem('salesInvoices151')) || [];
+        }
+        
+        function getAllInvoices() {
+            const entryInvoices = JSON.parse(localStorage.getItem('entryInvoices')) || [];
+            const sales151 = JSON.parse(localStorage.getItem('salesInvoices151')) || [];
+            const sales168 = JSON.parse(localStorage.getItem('salesInvoices168')) || [];
+            
+            return {
+                entryInvoices: entryInvoices,
+                sales151: sales151,
+                sales168: sales168
+            };
+        }
+        
+        // بازیابی داده از گیت هاب
+        function restoreFromData(data) {
+            // بازیابی انبار
+            if (data.inventory && Array.isArray(data.inventory)) {
+                localStorage.setItem('products', JSON.stringify(data.inventory));
+                products = data.inventory;
+            }
+            
+            // بازیابی فاکتورهای ورود
+            if (data.sales151 && Array.isArray(data.sales151)) {
+                localStorage.setItem('entryInvoices', JSON.stringify(data.sales151));
+                entryInvoices = data.sales151;
+            }
+            
+            // بازیابی فاکتورهای فروش 151
+            if (data.sales151 && Array.isArray(data.sales151)) {
+                localStorage.setItem('salesInvoices151', JSON.stringify(data.sales151));
+                salesInvoices151 = data.sales151;
+            }
+            
+            // بازیابی فاکتورهای فروش 168
+            if (data.sales168 && Array.isArray(data.sales168)) {
+                localStorage.setItem('salesInvoices168', JSON.stringify(data.sales168));
+                salesInvoices168 = data.sales168;
+            }
+            
+            // بازیابی فاکتورهای عمومی
+            if (data.invoices && Array.isArray(data.invoices)) {
+                // فاکتورهای عمومی در localStorage جداگانه ذخیره نمی‌شوند
+                // این بخش برای نسخه‌های آینده رزرو شده است
+            }
+            
+            // ایجاد backup خودکار
+            autoBackup();
         }
         
         // تابع ایجاد پشتیبان محلی
@@ -983,18 +1058,212 @@
         
         // تنظیم GitHub
         function setupGitHub() {
-            const message = `برای راه‌اندازی GitHub Gist:
-
-1. Personal Access Token از GitHub دریافت کنید
-2. Gist جدید ایجاد کنید
-3. Token و Gist ID را تنظیم کنید
-4. کد GitHub API به پروژه اضافه می‌شود
-
-آیا می‌خواهید راهنمای کامل GitHub API نمایش داده شود؟`;
+            // درخواست Personal Access Token
+            const token = prompt('لطفاً Personal Access Token از GitHub را وارد کنید:\n\nراهنما:\n1. به github.com بروید\n2. Settings → Developer settings → Personal access tokens\n3. Generate new token (classic)\n4. scopes: gist را انتخاب کنید\n5. Token را کپی و اینجا وارد کنید');
             
-            if (confirm(message)) {
-                window.open('https://docs.github.com/en/rest/gists/gists', '_blank');
+            if (!token) return;
+            
+            // درخواست Gist ID
+            const gistId = prompt('لطفاً ID گیست GitHub را وارد کنید:\n\nراهنما:\n1. gist.github.com بروید\n2. گیست جدید بسازید یا گیست موجود را باز کنید\n3. URL گیست را کپی کنید (مثل: https://gist.github.com/username/abc123def456)\n4. ID گیست (abc123def456) را اینجا وارد کنید');
+            
+            if (!gistId) return;
+            
+            // تست اتصال
+            testGitHubConnection(token, gistId);
+        }
+        
+        // تست اتصال گیت هاب
+        function testGitHubConnection(token, gistId) {
+            fetch(`https://api.github.com/gists/${gistId}`, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error(`خطا در اتصال: ${response.status} ${response.statusText}`);
+                }
+            })
+            .then(gist => {
+                // ذخیره تنظیمات
+                cloudSync.enabled = true;
+                cloudSync.provider = 'github';
+                cloudSync.config = {
+                    token: token,
+                    gistId: gistId,
+                    username: gist.owner?.login || 'Unknown'
+                };
+                cloudSync.lastSync = new Date().toISOString();
+                
+                localStorage.setItem('elishoes_cloud_sync', JSON.stringify(cloudSync));
+                updateSyncStatus();
+                
+                // نمایش موفقیت
+                const message = `✅ اتصال GitHub با موفقیت برقرار شد!
+
+👤 کاربر: ${gist.owner?.login || 'Unknown'}
+📝 نام گیست: ${gist.description || 'بدون توضیحات'}
+🔗 گیست ID: ${gistId}
+
+حالا می‌توانید همگام‌سازی داده‌ها را انجام دهید.`;
+                
+                showToast(message, 'success');
+                updateSyncStatus();
+            })
+            .catch(error => {
+                console.error('GitHub connection error:', error);
+                alert(`❌ خطا در اتصال به GitHub:\n\n${error.message}\n\nلطفاً Token و Gist ID را بررسی کنید و دوباره تلاش کنید.`);
+            });
+        }
+        
+        // همگام‌سازی به گیت هاب
+        function syncToGitHub() {
+            if (!cloudSync.enabled || cloudSync.provider !== 'github') {
+                alert('لطفاً ابتدا GitHub را تنظیم کنید');
+                return;
             }
+            
+            const config = cloudSync.config;
+            if (!config || !config.token || !config.gistId) {
+                alert('تنظیمات GitHub نامعتبر است. لطفاً دوباره تنظیم کنید.');
+                return;
+            }
+            
+            // جمع‌آوری داده‌ها
+            const data = {
+                elishoes_data: {
+                    inventory: getInventory(),
+                    sales151: getSales151(),
+                    sales168: getSales168(),
+                    invoices: getAllInvoices(),
+                    lastUpdated: new Date().toISOString(),
+                    version: '1.0'
+                }
+            };
+            
+            // بارگذاری گیست فعلی
+            fetch(`https://api.github.com/gists/${config.gistId}`, {
+                headers: {
+                    'Authorization': `token ${config.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`خطا در بارگذاری گیست: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(gist => {
+                // بروزرسانی گیست
+                const updatedGist = {
+                    description: 'EliShoes - Backup of inventory and sales data',
+                    files: {
+                        'elishoes_data.json': {
+                            content: JSON.stringify(data, null, 2)
+                        }
+                    }
+                };
+                
+                return fetch(`https://api.github.com/gists/${config.gistId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedGist)
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`خطا در همگام‌سازی: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                cloudSync.lastSync = new Date().toISOString();
+                localStorage.setItem('elishoes_cloud_sync', JSON.stringify(cloudSync));
+                updateSyncStatus();
+                
+                showToast('✅ داده‌ها با موفقیت در GitHub ذخیره شدند', 'success');
+            })
+            .catch(error => {
+                console.error('GitHub sync error:', error);
+                alert(`❌ خطا در همگام‌سازی:\n\n${error.message}\n\nلطفاً اتصال اینترنت و تنظیمات را بررسی کنید.`);
+            });
+        }
+        
+        // همگام‌سازی از گیت هاب
+        function syncFromGitHub() {
+            if (!cloudSync.enabled || cloudSync.provider !== 'github') {
+                alert('لطفاً ابتدا GitHub را تنظیم کنید');
+                return;
+            }
+            
+            const config = cloudSync.config;
+            if (!config || !config.token || !config.gistId) {
+                alert('تنظیمات GitHub نامعتبر است. لطفاً دوباره تنظیم کنید.');
+                return;
+            }
+            
+            // بارگذاری از گیت
+            fetch(`https://api.github.com/gists/${config.gistId}`, {
+                headers: {
+                    'Authorization': `token ${config.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`خطا در بارگذاری گیست: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(gist => {
+                const dataFile = gist.files['elishoes_data.json'];
+                if (!dataFile) {
+                    throw new Error('فایل داده در گیست یافت نشد');
+                }
+                
+                // دانلود محتوای فایل
+                return fetch(dataFile.raw_url);
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('خطا در دانلود داده‌ها');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.elishoes_data) {
+                    throw new Error('فرمت داده نامعتبر است');
+                }
+                
+                // بازگردانی داده‌ها
+                restoreFromData(data.elishoes_data);
+                
+                cloudSync.lastSync = new Date().toISOString();
+                localStorage.setItem('elishoes_cloud_sync', JSON.stringify(cloudSync));
+                updateSyncStatus();
+                
+                // بروزرسانی رابط
+                refreshInventory();
+                renderEntryInvoices();
+                renderSales151Invoices();
+                renderSales168Invoices();
+                updateProductSelects();
+                updateSystemInfo();
+                
+                showToast('✅ داده‌ها از GitHub با موفقیت بازیابی شدند', 'success');
+            })
+            .catch(error => {
+                console.error('GitHub sync error:', error);
+                alert(`❌ خطا در بازیابی:\n\n${error.message}\n\nلطفاً اتصال اینترنت و تنظیمات را بررسی کنید.`);
+            });
         }
         
         // بهبود LocalStorage
@@ -1027,6 +1296,7 @@
         // به‌روزرسانی وضعیت همگام‌سازی
         function updateSyncStatus() {
             const statusEl = document.getElementById('sync-status');
+            const githubSection = document.getElementById('github-sync-section');
             const savedConfig = localStorage.getItem('elishoes_cloud_sync');
             
             if (savedConfig) {
@@ -1034,12 +1304,20 @@
                 if (config.enabled && config.provider) {
                     statusEl.className = 'sync-status online';
                     statusEl.textContent = 'وضعیت همگام‌سازی: آنلاین (' + getProviderName(config.provider) + ')';
+                    
+                    // نمایش بخش GitHub اگر GitHub تنظیم شده باشد
+                    if (config.provider === 'github' && config.config) {
+                        githubSection.style.display = 'block';
+                    } else {
+                        githubSection.style.display = 'none';
+                    }
                     return;
                 }
             }
             
             statusEl.className = 'sync-status offline';
             statusEl.textContent = 'وضعیت همگام‌سازی: آفلاین (فقط LocalStorage)';
+            githubSection.style.display = 'none';
         }
         
         // نام ارائه‌دهنده
