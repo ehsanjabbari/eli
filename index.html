@@ -288,7 +288,43 @@
         .invoice-item {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .invoice-item:last-child {
+            border-bottom: none;
+        }
+
+        .invoice-item-view {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .invoice-item-edit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .invoice-item-edit input {
+            width: 80px;
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .edit-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
         }
 
         .hidden {
@@ -624,6 +660,7 @@
         let tempEntryItems = [];
         let tempSales151Items = [];
         let tempSales168Items = [];
+        let editingInvoice = null; // { type: 'entry'|'sales151'|'sales168', index: number }
 
         // تابع نمایش تب
         function showTab(tabName) {
@@ -647,6 +684,35 @@
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
+        }
+
+        // تابع نمایش آیتم‌های فاکتور (معمولی یا قابل ویرایش)
+        function renderInvoiceItems(items, type, invoiceIndex) {
+            if (editingInvoice?.type === type && editingInvoice?.index === invoiceIndex) {
+                // حالت ویرایش
+                return items.map((item, itemIndex) => `
+                    <div class="invoice-item">
+                        <div class="invoice-item-edit">
+                            <span>${item.name} - ${item.color}</span>
+                            <input type="number" min="1" value="${item.quantity}" 
+                                   id="edit-${type}-${invoiceIndex}-${itemIndex}" 
+                                   onchange="validateEditQuantity('${type}', ${invoiceIndex}, ${itemIndex}, this.value)">
+                            <span>عدد</span>
+                            <button class="btn btn-danger" onclick="removeInvoiceItem('${type}', ${invoiceIndex}, ${itemIndex})">🗑️ حذف</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                // حالت نمایش
+                return items.map(item => `
+                    <div class="invoice-item">
+                        <div class="invoice-item-view">
+                            <span>${item.name} - ${item.color}</span>
+                            <span>${item.quantity} عدد</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
         }
 
         // مدیریت ورودی
@@ -762,22 +828,204 @@
                 return;
             }
 
-            container.innerHTML = entryInvoices.map(invoice => `
+            container.innerHTML = entryInvoices.map((invoice, index) => `
                 <div class="invoice-card">
                     <div class="invoice-header">
                         <strong>فاکتور ورودی #${invoice.id}</strong>
                         <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
+                        ${editingInvoice?.type === 'entry' && editingInvoice?.index === index ? 
+                            '<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>' :
+                            '<button class="btn btn-secondary" onclick="editInvoice(\'entry\', ${index})">✏️ ویرایش</button>'
+                        }
                     </div>
-                    <div class="invoice-items">
-                        ${invoice.items.map(item => `
-                            <div class="invoice-item">
-                                <span>${item.name} - ${item.color}</span>
-                                <span>${item.quantity} عدد</span>
-                            </div>
-                        `).join('')}
+                    <div class="invoice-items" id="entry-invoice-${index}">
+                        ${renderInvoiceItems(invoice.items, 'entry', index)}
                     </div>
                 </div>
             `).join('');
+        }
+
+        // توابع ویرایش فاکتور
+        function editInvoice(type, index) {
+            // لغو ویرایش قبلی اگر وجود داشته باشد
+            if (editingInvoice) {
+                cancelInvoiceEdit();
+            }
+            
+            editingInvoice = { type, index };
+            
+            if (type === 'entry') {
+                renderEntryInvoices();
+            } else if (type === 'sales151') {
+                renderSales151Invoices();
+            } else if (type === 'sales168') {
+                renderSales168Invoices();
+            }
+        }
+
+        function cancelInvoiceEdit() {
+            editingInvoice = null;
+            renderEntryInvoices();
+            renderSales151Invoices();
+            renderSales168Invoices();
+        }
+
+        function saveInvoiceEdit() {
+            if (!editingInvoice) return;
+
+            const { type, index } = editingInvoice;
+            let invoice;
+            
+            if (type === 'entry') {
+                invoice = entryInvoices[index];
+            } else if (type === 'sales151') {
+                invoice = salesInvoices151[index];
+            } else if (type === 'sales168') {
+                invoice = salesInvoices168[index];
+            }
+
+            if (!invoice) return;
+
+            // اعتبارسنجی فروش بر اساس موجودی
+            if (type === 'sales151' || type === 'sales168') {
+                for (let itemIndex = 0; itemIndex < invoice.items.length; itemIndex++) {
+                    const item = invoice.items[itemIndex];
+                    const newQuantity = parseInt(document.getElementById(`edit-${type}-${index}-${itemIndex}`).value) || item.quantity;
+                    
+                    if (newQuantity > 0) {
+                        const product = products.find(p => p.name === item.name && p.color === item.color);
+                        if (product) {
+                            const currentStock = getStock(product);
+                            if (newQuantity > currentStock + item.quantity) {
+                                showToast(`موجودی ${item.name} - ${item.color} کافی نیست`, 'error');
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // بروزرسانی آیتم‌ها از فیلدهای ویرایش
+            invoice.items = invoice.items.map((item, itemIndex) => {
+                const input = document.getElementById(`edit-${type}-${index}-${itemIndex}`);
+                if (input) {
+                    return {
+                        ...item,
+                        quantity: parseInt(input.value) || item.quantity
+                    };
+                }
+                return item;
+            }).filter(item => item.quantity > 0);
+
+            // ذخیره در localStorage
+            if (type === 'entry') {
+                localStorage.setItem('entryInvoices', JSON.stringify(entryInvoices));
+            } else if (type === 'sales151') {
+                localStorage.setItem('salesInvoices151', JSON.stringify(salesInvoices151));
+            } else if (type === 'sales168') {
+                localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
+            }
+
+            // بروزرسانی موجودی محصولات
+            updateProductQuantities(type, index);
+
+            // لغو ویرایش و رندر مجدد
+            editingInvoice = null;
+            renderEntryInvoices();
+            renderSales151Invoices();
+            renderSales168Invoices();
+            refreshInventory();
+            updateProductSelects();
+
+            showToast('فاکتور با موفقیت ویرایش شد');
+        }
+
+        function removeInvoiceItem(type, invoiceIndex, itemIndex) {
+            let invoices;
+            if (type === 'entry') {
+                invoices = entryInvoices;
+            } else if (type === 'sales151') {
+                invoices = salesInvoices151;
+            } else if (type === 'sales168') {
+                invoices = salesInvoices168;
+            }
+
+            if (!invoices || !invoices[invoiceIndex]) return;
+
+            invoices[invoiceIndex].items.splice(itemIndex, 1);
+
+            // اگر فاکتور خالی شد، آن را حذف کن
+            if (invoices[invoiceIndex].items.length === 0) {
+                invoices.splice(invoiceIndex, 1);
+            }
+
+            // ذخیره در localStorage
+            if (type === 'entry') {
+                localStorage.setItem('entryInvoices', JSON.stringify(entryInvoices));
+            } else if (type === 'sales151') {
+                localStorage.setItem('salesInvoices151', JSON.stringify(salesInvoices151));
+            } else if (type === 'sales168') {
+                localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
+            }
+
+            // لغو ویرایش و رندر مجدد
+            editingInvoice = null;
+            renderEntryInvoices();
+            renderSales151Invoices();
+            renderSales168Invoices();
+            refreshInventory();
+            updateProductSelects();
+
+            showToast('آیتم از فاکتور حذف شد');
+        }
+
+        function validateEditQuantity(type, invoiceIndex, itemIndex, value) {
+            const quantity = parseInt(value);
+            if (quantity < 1) {
+                document.getElementById(`edit-${type}-${invoiceIndex}-${itemIndex}`).value = 1;
+                showToast('تعداد نمی‌تواند کمتر از ۱ باشد', 'error');
+            }
+        }
+
+        function updateProductQuantities(type, invoiceIndex) {
+            // بازسازی کامل موجودی محصولات
+            products.forEach(product => {
+                product.entry = 0;
+                product.sales151 = 0;
+                product.sales168 = 0;
+            });
+
+            // محاسبه ورودی‌ها
+            entryInvoices.forEach(invoice => {
+                invoice.items.forEach(item => {
+                    const product = products.find(p => p.name === item.name && p.color === item.color);
+                    if (product) {
+                        product.entry += item.quantity;
+                    }
+                });
+            });
+
+            // محاسبه فروش ۱۵۱
+            salesInvoices151.forEach(invoice => {
+                invoice.items.forEach(item => {
+                    const product = products.find(p => p.name === item.name && p.color === item.color);
+                    if (product) {
+                        product.sales151 += item.quantity;
+                    }
+                });
+            });
+
+            // محاسبه فروش ۱۶۸
+            salesInvoices168.forEach(invoice => {
+                invoice.items.forEach(item => {
+                    const product = products.find(p => p.name === item.name && p.color === item.color);
+                    if (product) {
+                        product.sales168 += item.quantity;
+                    }
+                });
+            });
+
+            localStorage.setItem('products', JSON.stringify(products));
         }
 
         // مدیریت فروش ۱۵۱
@@ -908,19 +1156,18 @@
                 return;
             }
 
-            container.innerHTML = salesInvoices151.map(invoice => `
+            container.innerHTML = salesInvoices151.map((invoice, index) => `
                 <div class="invoice-card">
                     <div class="invoice-header">
                         <strong>فاکتور فروش ۱۵۱ #${invoice.id}</strong>
                         <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
+                        ${editingInvoice?.type === 'sales151' && editingInvoice?.index === index ? 
+                            '<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>' :
+                            '<button class="btn btn-secondary" onclick="editInvoice(\'sales151\', ${index})">✏️ ویرایش</button>'
+                        }
                     </div>
-                    <div class="invoice-items">
-                        ${invoice.items.map(item => `
-                            <div class="invoice-item">
-                                <span>${item.name} - ${item.color}</span>
-                                <span>${item.quantity} عدد</span>
-                            </div>
-                        `).join('')}
+                    <div class="invoice-items" id="sales151-invoice-${index}">
+                        ${renderInvoiceItems(invoice.items, 'sales151', index)}
                     </div>
                 </div>
             `).join('');
@@ -1024,19 +1271,18 @@
                 return;
             }
 
-            container.innerHTML = salesInvoices168.map(invoice => `
+            container.innerHTML = salesInvoices168.map((invoice, index) => `
                 <div class="invoice-card">
                     <div class="invoice-header">
                         <strong>فاکتور فروش ۱۶۸ #${invoice.id}</strong>
                         <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
+                        ${editingInvoice?.type === 'sales168' && editingInvoice?.index === index ? 
+                            '<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>' :
+                            '<button class="btn btn-secondary" onclick="editInvoice(\'sales168\', ${index})">✏️ ویرایش</button>'
+                        }
                     </div>
-                    <div class="invoice-items">
-                        ${invoice.items.map(item => `
-                            <div class="invoice-item">
-                                <span>${item.name} - ${item.color}</span>
-                                <span>${item.quantity} عدد</span>
-                            </div>
-                        `).join('')}
+                    <div class="invoice-items" id="sales168-invoice-${index}">
+                        ${renderInvoiceItems(invoice.items, 'sales168', index)}
                     </div>
                 </div>
             `).join('');
