@@ -491,6 +491,13 @@
             <div class="form-section">
                 <div class="form-row">
                     <div class="form-group">
+                        <label>انتخاب محصول</label>
+                        <select id="entry-product-select" onchange="onEntryProductSelect()">
+                            <option value="">انتخاب محصول موجود یا محصول جدید</option>
+                            <option value="new">➕ محصول جدید</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>نام محصول</label>
                         <input type="text" id="entry-product-name" placeholder="مثال: کفش اسپورت">
                     </div>
@@ -1379,6 +1386,10 @@
             
             if (tabName === 'inventory') {
                 refreshInventory();
+            } else if (tabName === 'entry') {
+                updateEntryProductSelect();
+            } else if (tabName === 'sales151' || tabName === 'sales168') {
+                updateProductSelects();
             } else if (tabName === 'data-management') {
                 updateSystemInfo();
                 updateSyncStatus();
@@ -1427,6 +1438,7 @@
 
         // مدیریت ورودی
         function addEntry(targetInvoiceId = null) {
+            const select = document.getElementById('entry-product-select').value;
             const name = document.getElementById('entry-product-name').value.trim();
             const color = document.getElementById('entry-product-color').value.trim();
             const quantity = parseInt(document.getElementById('entry-quantity').value);
@@ -1450,6 +1462,8 @@
                     sales168: 0
                 };
                 products.push(product);
+                // بروزرسانی لیست محصولات در فرم
+                updateEntryProductSelect();
             }
 
             // استفاده از targetInvoiceId ارسال شده یا currentAddTarget
@@ -1479,9 +1493,8 @@
                     autoBackup();
                     
                     // پاک کردن فرم
-                    document.getElementById('entry-product-name').value = '';
-                    document.getElementById('entry-product-color').value = '';
-                    document.getElementById('entry-quantity').value = '1';
+                    clearEntryForm();
+                    updateEntryProductSelect();
                     
                     // رندر مجدد
                     renderEntryInvoices();
@@ -1502,9 +1515,8 @@
                 });
 
                 // پاک کردن فرم
-                document.getElementById('entry-product-name').value = '';
-                document.getElementById('entry-product-color').value = '';
-                document.getElementById('entry-quantity').value = '1';
+                clearEntryForm();
+                updateEntryProductSelect();
 
                 // نمایش لیست موقت
                 document.getElementById('entry-temp-list').classList.remove('hidden');
@@ -1574,6 +1586,8 @@
         function cancelEntry() {
             tempEntryItems = [];
             document.getElementById('entry-temp-list').classList.add('hidden');
+            clearEntryForm();
+            updateEntryProductSelect();
         }
 
         function renderEntryInvoices() {
@@ -1928,6 +1942,47 @@
                     localStorage.setItem('elishoes_autobackup', JSON.stringify(autoBackupConfig));
                 }
             }
+        }
+        
+        // ========== مدیریت ورودی محصولات ==========
+        function updateEntryProductSelect() {
+            const select = document.getElementById('entry-product-select');
+            
+            const existingProducts = products.map(product => 
+                `<option value="${product.id}">${product.name} - ${product.color} (موجودی فعلی: ${getStock(product)})</option>`
+            ).join('');
+            
+            select.innerHTML = '<option value="">انتخاب محصول موجود یا محصول جدید</option>' +
+                              '<option value="new">➕ محصول جدید</option>' +
+                              existingProducts;
+        }
+
+        function onEntryProductSelect() {
+            const select = document.getElementById('entry-product-select');
+            const productName = document.getElementById('entry-product-name');
+            const productColor = document.getElementById('entry-product-color');
+            
+            if (select.value === 'new') {
+                // محصول جدید - فیلدها را خالی می‌کنیم
+                productName.value = '';
+                productColor.value = '';
+                productName.focus();
+            } else if (select.value) {
+                // محصول موجود - فیلدها را پر می‌کنیم
+                const product = products.find(p => p.id == select.value);
+                if (product) {
+                    productName.value = product.name;
+                    productColor.value = product.color;
+                    productName.focus();
+                }
+            }
+        }
+
+        function clearEntryForm() {
+            document.getElementById('entry-product-select').value = '';
+            document.getElementById('entry-product-name').value = '';
+            document.getElementById('entry-product-color').value = '';
+            document.getElementById('entry-quantity').value = '1';
         }
         
         // ========== مدیریت فروش ۱۵۱ ==========
@@ -2417,6 +2472,7 @@
             renderSales151Invoices();
             renderSales168Invoices();
             updateProductSelects();
+            updateEntryProductSelect();
             refreshInventory();
             updateSystemInfo();
             updateSyncStatus();
