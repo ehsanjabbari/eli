@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم انبارداری کفش زنانه - ساده</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .form-section {
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid #e8eaff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 25px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .table th, .table td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table th {
+            background: #f8f9ff;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .table tbody tr:hover {
+            background: #f8f9ff;
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .stock-low {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .stock-ok {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .invoice-list {
+            display: grid;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .invoice-card {
+            background: #f8f9ff;
+            border: 2px solid #e8eaff;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .invoice-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .invoice-items {
+            font-size: 0.9rem;
+        }
+
+        .invoice-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        .toast.info {
+            background: #17a2b8;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+
+            .table-container {
+                font-size: 0.9rem;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>سیستم انبارداری کفش زنانه</h1>
+            <p>مدیریت ورودی و فروش محصولات</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('entry')">📦 ورودی</button>
+            <button class="tab" onclick="showTab('sales151')">🏪 فروش ۱۵۱</button>
+            <button class="tab" onclick="showTab('sales168')">🏪 فروش ۱۶۸</button>
+            <button class="tab" onclick="showTab('inventory')">📊 موجودی</button>
+        </div>
+
+        <!-- ورودی Tab -->
+        <div id="entry" class="tab-content active">
+            <h2 class="section-title">📦 ثبت ورودی محصولات</h2>
+            
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نام محصول</label>
+                        <input type="text" id="entry-product-name" placeholder="مثال: کفش اسپورت">
+                    </div>
+                    <div class="form-group">
+                        <label>رنگ</label>
+                        <input type="text" id="entry-product-color" placeholder="مثال: مشکی">
+                    </div>
+                    <div class="form-group">
+                        <label>تعداد</label>
+                        <input type="number" id="entry-quantity" min="1" value="1">
+                    </div>
+                    <div class="form-group" style="width: auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-success" onclick="addEntry()">➕ افزودن</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="entry-temp-list" class="hidden">
+                <h3>محصولات موقت ورودی</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>رنگ</th>
+                                <th>تعداد</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="entry-temp-body"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-success" onclick="saveEntry()">💾 ذخیره فاکتور ورودی</button>
+                    <button class="btn btn-secondary" onclick="cancelEntry()">❌ لغو</button>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">📋 فاکتورهای ورودی</h3>
+            <div id="entry-invoices" class="invoice-list"></div>
+        </div>
+
+        <!-- فروش ۱۵۱ Tab -->
+        <div id="sales151" class="tab-content">
+            <h2 class="section-title">🏪 فروش فروشگاه ۱۵۱</h2>
+            
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نام محصول</label>
+                        <select id="sales151-product" onchange="updateStock151()">
+                            <option value="">انتخاب محصول</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>موجودی فعلی</label>
+                        <input type="text" id="stock151" readonly placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>تعداد فروخته</label>
+                        <input type="number" id="sales151-quantity" min="1" value="1">
+                    </div>
+                    <div class="form-group" style="width: auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-success" onclick="addSales151()">➕ افزودن</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sales151-temp-list" class="hidden">
+                <h3>محصولات موقت فروش ۱۵۱</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>رنگ</th>
+                                <th>تعداد</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales151-temp-body"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-success" onclick="saveSales151()">💾 ثبت فروش</button>
+                    <button class="btn btn-secondary" onclick="cancelSales151()">❌ لغو</button>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">📋 فاکتورهای فروش ۱۵۱</h3>
+            <div id="sales151-invoices" class="invoice-list"></div>
+        </div>
+
+        <!-- فروش ۱۶۸ Tab -->
+        <div id="sales168" class="tab-content">
+            <h2 class="section-title">🏪 فروش فروشگاه ۱۶۸</h2>
+            
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نام محصول</label>
+                        <select id="sales168-product" onchange="updateStock168()">
+                            <option value="">انتخاب محصول</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>موجودی فعلی</label>
+                        <input type="text" id="stock168" readonly placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>تعداد فروخته</label>
+                        <input type="number" id="sales168-quantity" min="1" value="1">
+                    </div>
+                    <div class="form-group" style="width: auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-success" onclick="addSales168()">➕ افزودن</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sales168-temp-list" class="hidden">
+                <h3>محصولات موقت فروش ۱۶۸</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>نام محصول</th>
+                                <th>رنگ</th>
+                                <th>تعداد</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales168-temp-body"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-success" onclick="saveSales168()">💾 ثبت فروش</button>
+                    <button class="btn btn-secondary" onclick="cancelSales168()">❌ لغو</button>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">📋 فاکتورهای فروش ۱۶۸</h3>
+            <div id="sales168-invoices" class="invoice-list"></div>
+        </div>
+
+        <!-- موجودی Tab -->
+        <div id="inventory" class="tab-content">
+            <h2 class="section-title">📊 گزارش موجودی انبار</h2>
+            
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="showAddProduct()">➕ افزودن محصول جدید</button>
+                <button class="btn btn-secondary" onclick="refreshInventory()">🔄 بروزرسانی</button>
+            </div>
+
+            <div id="add-product-form" class="form-section hidden">
+                <h3>افزودن محصول جدید</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نام محصول</label>
+                        <input type="text" id="new-product-name" placeholder="مثال: کفش اسپورت">
+                    </div>
+                    <div class="form-group">
+                        <label>رنگ</label>
+                        <input type="text" id="new-product-color" placeholder="مثال: مشکی">
+                    </div>
+                    <div class="form-group" style="width: auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-success" onclick="saveNewProduct()">💾 ذخیره</button>
+                    </div>
+                    <div class="form-group" style="width: auto;">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-secondary" onclick="hideAddProduct()">❌ لغو</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-products">0</div>
+                    <div class="stat-label">تعداد محصولات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-stock">0</div>
+                    <div class="stat-label">مجموع موجودی</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="low-stock">0</div>
+                    <div class="stat-label">موجودی کم</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>نام محصول</th>
+                            <th>رنگ</th>
+                            <th>ورودی کل</th>
+                            <th>فروش ۱۵۱</th>
+                            <th>فروش ۱۶۸</th>
+                            <th>موجودی</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // متغیرهای عمومی
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+        let entryInvoices = JSON.parse(localStorage.getItem('entryInvoices')) || [];
+        let salesInvoices151 = JSON.parse(localStorage.getItem('salesInvoices151')) || [];
+        let salesInvoices168 = JSON.parse(localStorage.getItem('salesInvoices168')) || [];
+        let tempEntryItems = [];
+        let tempSales151Items = [];
+        let tempSales168Items = [];
+
+        // تابع نمایش تب
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'inventory') {
+                refreshInventory();
+            }
+        }
+
+        // تابع نمایش پیام
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // مدیریت ورودی
+        function addEntry() {
+            const name = document.getElementById('entry-product-name').value.trim();
+            const color = document.getElementById('entry-product-color').value.trim();
+            const quantity = parseInt(document.getElementById('entry-quantity').value);
+
+            if (!name || !color || quantity <= 0) {
+                showToast('لطفاً تمام فیلدها را پر کنید', 'error');
+                return;
+            }
+
+            // جستجوی محصول موجود
+            let product = products.find(p => p.name === name && p.color === color);
+            
+            if (!product) {
+                // محصول جدید
+                product = {
+                    id: Date.now(),
+                    name: name,
+                    color: color,
+                    entry: 0,
+                    sales151: 0,
+                    sales168: 0
+                };
+                products.push(product);
+            }
+
+            // افزودن به لیست موقت
+            tempEntryItems.push({
+                productId: product.id,
+                name: name,
+                color: color,
+                quantity: quantity
+            });
+
+            // پاک کردن فرم
+            document.getElementById('entry-product-name').value = '';
+            document.getElementById('entry-product-color').value = '';
+            document.getElementById('entry-quantity').value = '1';
+
+            // نمایش لیست موقت
+            document.getElementById('entry-temp-list').classList.remove('hidden');
+            renderTempEntryItems();
+
+            showToast('محصول به لیست ورودی اضافه شد');
+        }
+
+        function renderTempEntryItems() {
+            const tbody = document.getElementById('entry-temp-body');
+            tbody.innerHTML = tempEntryItems.map((item, index) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td><button class="btn btn-danger" onclick="removeTempEntryItem(${index})">🗑️ حذف</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function removeTempEntryItem(index) {
+            tempEntryItems.splice(index, 1);
+            if (tempEntryItems.length === 0) {
+                document.getElementById('entry-temp-list').classList.add('hidden');
+            } else {
+                renderTempEntryItems();
+            }
+        }
+
+        function saveEntry() {
+            if (tempEntryItems.length === 0) return;
+
+            const invoice = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                items: [...tempEntryItems]
+            };
+
+            entryInvoices.push(invoice);
+            localStorage.setItem('entryInvoices', JSON.stringify(entryInvoices));
+
+            // بروزرسانی موجودی محصولات
+            tempEntryItems.forEach(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (product) {
+                    product.entry += item.quantity;
+                }
+            });
+
+            localStorage.setItem('products', JSON.stringify(products));
+
+            // پاک کردن لیست موقت
+            tempEntryItems = [];
+            document.getElementById('entry-temp-list').classList.add('hidden');
+
+            renderEntryInvoices();
+            showToast('فاکتور ورودی ذخیره شد');
+
+            // بروزرسانی select در تب‌های فروش
+            updateProductSelects();
+        }
+
+        function cancelEntry() {
+            tempEntryItems = [];
+            document.getElementById('entry-temp-list').classList.add('hidden');
+        }
+
+        function renderEntryInvoices() {
+            const container = document.getElementById('entry-invoices');
+            if (entryInvoices.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">هیچ فاکتور ورودی وجود ندارد</p>';
+                return;
+            }
+
+            container.innerHTML = entryInvoices.map(invoice => `
+                <div class="invoice-card">
+                    <div class="invoice-header">
+                        <strong>فاکتور ورودی #${invoice.id}</strong>
+                        <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
+                    </div>
+                    <div class="invoice-items">
+                        ${invoice.items.map(item => `
+                            <div class="invoice-item">
+                                <span>${item.name} - ${item.color}</span>
+                                <span>${item.quantity} عدد</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // مدیریت فروش ۱۵۱
+        function updateProductSelects() {
+            const select151 = document.getElementById('sales151-product');
+            const select168 = document.getElementById('sales168-product');
+            
+            const options = products.map(product => 
+                `<option value="${product.id}">${product.name} - ${product.color} (موجودی: ${getStock(product)})</option>`
+            ).join('');
+
+            select151.innerHTML = '<option value="">انتخاب محصول</option>' + options;
+            select168.innerHTML = '<option value="">انتخاب محصول</option>' + options;
+        }
+
+        function getStock(product) {
+            return product.entry - product.sales151 - product.sales168;
+        }
+
+        function updateStock151() {
+            const productId = parseInt(document.getElementById('sales151-product').value);
+            const product = products.find(p => p.id === productId);
+            const stock = product ? getStock(product) : 0;
+            document.getElementById('stock151').value = stock;
+        }
+
+        function updateStock168() {
+            const productId = parseInt(document.getElementById('sales168-product').value);
+            const product = products.find(p => p.id === productId);
+            const stock = product ? getStock(product) : 0;
+            document.getElementById('stock168').value = stock;
+        }
+
+        function addSales151() {
+            const productId = parseInt(document.getElementById('sales151-product').value);
+            const quantity = parseInt(document.getElementById('sales151-quantity').value);
+            const product = products.find(p => p.id === productId);
+
+            if (!product || quantity <= 0) {
+                showToast('لطفاً محصول و تعداد را انتخاب کنید', 'error');
+                return;
+            }
+
+            const stock = getStock(product);
+            if (quantity > stock) {
+                showToast('موجودی کافی نیست', 'error');
+                return;
+            }
+
+            tempSales151Items.push({
+                productId: productId,
+                name: product.name,
+                color: product.color,
+                quantity: quantity
+            });
+
+            document.getElementById('sales151-product').value = '';
+            document.getElementById('stock151').value = '';
+            document.getElementById('sales151-quantity').value = '1';
+
+            document.getElementById('sales151-temp-list').classList.remove('hidden');
+            renderTempSales151Items();
+
+            showToast('محصول به لیست فروش اضافه شد');
+        }
+
+        function renderTempSales151Items() {
+            const tbody = document.getElementById('sales151-temp-body');
+            tbody.innerHTML = tempSales151Items.map((item, index) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td><button class="btn btn-danger" onclick="removeTempSales151Item(${index})">🗑️ حذف</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function removeTempSales151Item(index) {
+            tempSales151Items.splice(index, 1);
+            if (tempSales151Items.length === 0) {
+                document.getElementById('sales151-temp-list').classList.add('hidden');
+            } else {
+                renderTempSales151Items();
+            }
+        }
+
+        function saveSales151() {
+            if (tempSales151Items.length === 0) return;
+
+            const invoice = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                items: [...tempSales151Items]
+            };
+
+            salesInvoices151.push(invoice);
+            localStorage.setItem('salesInvoices151', JSON.stringify(salesInvoices151));
+
+            // بروزرسانی موجودی محصولات
+            tempSales151Items.forEach(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (product) {
+                    product.sales151 += item.quantity;
+                }
+            });
+
+            localStorage.setItem('products', JSON.stringify(products));
+
+            tempSales151Items = [];
+            document.getElementById('sales151-temp-list').classList.add('hidden');
+            renderSales151Invoices();
+            showToast('فاکتور فروش ۱۵۱ ثبت شد');
+
+            // بروزرسانی select
+            updateProductSelects();
+        }
+
+        function cancelSales151() {
+            tempSales151Items = [];
+            document.getElementById('sales151-temp-list').classList.add('hidden');
+        }
+
+        function renderSales151Invoices() {
+            const container = document.getElementById('sales151-invoices');
+            if (salesInvoices151.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">هیچ فاکتور فروش ۱۵۱ وجود ندارد</p>';
+                return;
+            }
+
+            container.innerHTML = salesInvoices151.map(invoice => `
+                <div class="invoice-card">
+                    <div class="invoice-header">
+                        <strong>فاکتور فروش ۱۵۱ #${invoice.id}</strong>
+                        <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
+                    </div>
+                    <div class="invoice-items">
+                        ${invoice.items.map(item => `
+                            <div class="invoice-item">
+                                <span>${item.name} - ${item.color}</span>
+                                <span>${item.quantity} عدد</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // مدیریت فروش ۱۶۸
+        function addSales168() {
+            const productId = parseInt(document.getElementById('sales168-product').value);
+            const quantity = parseInt(document.getElementById('sales168-quantity').value);
+            const product = products.find(p => p.id === productId);
+
+            if (!product || quantity <= 0) {
+                showToast('لطفاً محصول و تعداد را انتخاب کنید', 'error');
+                return;
+            }
+
+            const stock = getStock(product);
+            if (quantity > stock) {
+                showToast('موجودی کافی نیست', 'error');
+                return;
+            }
+
+            tempSales168Items.push({
+                productId: productId,
+                name: product.name,
+                color: product.color,
+                quantity: quantity
+            });
+
+            document.getElementById('sales168-product').value = '';
+            document.getElementById('stock168').value = '';
+            document.getElementById('sales168-quantity').value = '1';
+
+            document.getElementById('sales168-temp-list').classList.remove('hidden');
+            renderTempSales168Items();
+
+            showToast('محصول به لیست فروش اضافه شد');
+        }
+
+        function renderTempSales168Items() {
+            const tbody = document.getElementById('sales168-temp-body');
+            tbody.innerHTML = tempSales168Items.map((item, index) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td><button class="btn btn-danger" onclick="removeTempSales168Item(${index})">🗑️ حذف</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function removeTempSales168Item(index) {
+            tempSales168Items.splice(index, 1);
+            if (tempSales168Items.length === 0) {
+                document.getElementById('sales168-temp-list').classList.add('hidden');
+            } else {
+                renderTempSales168Items();
+            }
+        }
+
+        function saveSales168() {
+            if (tempSales168Items.length === 0) return;
+
+            const invoice = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                items: [...tempSales168Items]
+            };
+
+            salesInvoices168.push(invoice);
+            localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
+
+            // بروزرسانی موجودی محصولات
+            tempSales168Items.forEach(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (product) {
+                    product.sales168 += item.quantity;
+                }
+            });
+
+            localStorage.setItem('products', JSON.stringify(products));
+
+            tempSales168Items = [];
+            document.getElementById('sales168-temp-list').classList.add('hidden');
+            renderSales168Invoices();
+            showToast('فاکتور فروش ۱۶۸ ثبت شد');
+
+            // بروزرسانی select
+            updateProductSelects();
+        }
+
+        function cancelSales168() {
+            tempSales168Items = [];
+            document.getElementById('sales168-temp-list').classList.add('hidden');
+        }
+
+        function renderSales168Invoices() {
+            const container = document.getElementById('sales168-invoices');
+            if (salesInvoices168.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">هیچ فاکتور فروش ۱۶۸ وجود ندارد</p>';
+                return;
+            }
+
+            container.innerHTML = salesInvoices168.map(invoice => `
+                <div class="invoice-card">
+                    <div class="invoice-header">
+                        <strong>فاکتور فروش ۱۶۸ #${invoice.id}</strong>
+                        <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
+                    </div>
+                    <div class="invoice-items">
+                        ${invoice.items.map(item => `
+                            <div class="invoice-item">
+                                <span>${item.name} - ${item.color}</span>
+                                <span>${item.quantity} عدد</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // مدیریت محصولات جدید
+        function showAddProduct() {
+            document.getElementById('add-product-form').classList.remove('hidden');
+        }
+
+        function hideAddProduct() {
+            document.getElementById('add-product-form').classList.add('hidden');
+            document.getElementById('new-product-name').value = '';
+            document.getElementById('new-product-color').value = '';
+        }
+
+        function saveNewProduct() {
+            const name = document.getElementById('new-product-name').value.trim();
+            const color = document.getElementById('new-product-color').value.trim();
+
+            if (!name || !color) {
+                showToast('لطفاً نام و رنگ محصول را وارد کنید', 'error');
+                return;
+            }
+
+            // بررسی تکراری نبودن
+            if (products.some(p => p.name === name && p.color === color)) {
+                showToast('این محصول قبلاً اضافه شده است', 'error');
+                return;
+            }
+
+            const newProduct = {
+                id: Date.now(),
+                name: name,
+                color: color,
+                entry: 0,
+                sales151: 0,
+                sales168: 0
+            };
+
+            products.push(newProduct);
+            localStorage.setItem('products', JSON.stringify(products));
+
+            hideAddProduct();
+            showToast('محصول جدید اضافه شد');
+            refreshInventory();
+            updateProductSelects();
+        }
+
+        // مدیریت موجودی
+        function refreshInventory() {
+            const tbody = document.getElementById('inventory-body');
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">هیچ محصولی وجود ندارد</td></tr>';
+                document.getElementById('total-products').textContent = '0';
+                document.getElementById('total-stock').textContent = '0';
+                document.getElementById('low-stock').textContent = '0';
+                return;
+            }
+
+            let totalStock = 0;
+            let lowStockCount = 0;
+
+            tbody.innerHTML = products.map(product => {
+                const stock = getStock(product);
+                totalStock += stock;
+                if (stock <= 5) lowStockCount++;
+
+                const stockClass = stock <= 5 ? 'stock-low' : 'stock-ok';
+
+                return `
+                    <tr>
+                        <td>${product.name}</td>
+                        <td>${product.color}</td>
+                        <td>${product.entry}</td>
+                        <td>${product.sales151}</td>
+                        <td>${product.sales168}</td>
+                        <td class="${stockClass}">${stock}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // بروزرسانی آمار
+            document.getElementById('total-products').textContent = products.length;
+            document.getElementById('total-stock').textContent = totalStock;
+            document.getElementById('low-stock').textContent = lowStockCount;
+        }
+
+        // بارگذاری اولیه
+        function init() {
+            renderEntryInvoices();
+            renderSales151Invoices();
+            renderSales168Invoices();
+            updateProductSelects();
+            refreshInventory();
+        }
+
+        // شروع برنامه
+        init();
+    </script>
+</body>
+</html>
