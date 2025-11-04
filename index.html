@@ -203,6 +203,17 @@
             box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
         }
 
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+        }
+
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -270,10 +281,17 @@
         .invoice-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid #e0e0e0;
+            gap: 15px;
+        }
+
+        .invoice-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .invoice-date {
@@ -661,6 +679,7 @@
         let tempSales151Items = [];
         let tempSales168Items = [];
         let editingInvoice = null; // { type: 'entry'|'sales151'|'sales168', index: number }
+        let currentAddTarget = null; // { type: 'entry'|'sales151'|'sales168', invoiceId: number }
 
         // تابع نمایش تب
         function showTab(tabName) {
@@ -716,7 +735,7 @@
         }
 
         // مدیریت ورودی
-        function addEntry() {
+        function addEntry(targetInvoiceId = null) {
             const name = document.getElementById('entry-product-name').value.trim();
             const color = document.getElementById('entry-product-color').value.trim();
             const quantity = parseInt(document.getElementById('entry-quantity').value);
@@ -742,24 +761,63 @@
                 products.push(product);
             }
 
-            // افزودن به لیست موقت
-            tempEntryItems.push({
-                productId: product.id,
-                name: name,
-                color: color,
-                quantity: quantity
-            });
+            // استفاده از targetInvoiceId ارسال شده یا currentAddTarget
+            const invoiceId = targetInvoiceId || (currentAddTarget?.type === 'entry' ? currentAddTarget.invoiceId : null);
+            
+            if (invoiceId) {
+                // افزودن به فاکتور موجود
+                const invoice = entryInvoices.find(inv => inv.id == invoiceId);
+                if (invoice) {
+                    invoice.items.push({
+                        name: name,
+                        color: color,
+                        quantity: quantity
+                    });
+                    
+                    // بروزرسانی موجودی
+                    const prod = products.find(p => p.name === name && p.color === color);
+                    if (prod) {
+                        prod.entry += quantity;
+                    }
+                    
+                    // ذخیره تغییرات
+                    localStorage.setItem('entryInvoices', JSON.stringify(entryInvoices));
+                    localStorage.setItem('products', JSON.stringify(products));
+                    
+                    // پاک کردن فرم
+                    document.getElementById('entry-product-name').value = '';
+                    document.getElementById('entry-product-color').value = '';
+                    document.getElementById('entry-quantity').value = '1';
+                    
+                    // رندر مجدد
+                    renderEntryInvoices();
+                    refreshInventory();
+                    updateProductSelects();
+                    
+                    showToast('محصول به فاکتور اضافه شد');
+                } else {
+                    showToast('فاکتور مورد نظر یافت نشد', 'error');
+                }
+            } else {
+                // افزودن به لیست موقت (برای فاکتور جدید)
+                tempEntryItems.push({
+                    productId: product.id,
+                    name: name,
+                    color: color,
+                    quantity: quantity
+                });
 
-            // پاک کردن فرم
-            document.getElementById('entry-product-name').value = '';
-            document.getElementById('entry-product-color').value = '';
-            document.getElementById('entry-quantity').value = '1';
+                // پاک کردن فرم
+                document.getElementById('entry-product-name').value = '';
+                document.getElementById('entry-product-color').value = '';
+                document.getElementById('entry-quantity').value = '1';
 
-            // نمایش لیست موقت
-            document.getElementById('entry-temp-list').classList.remove('hidden');
-            renderTempEntryItems();
+                // نمایش لیست موقت
+                document.getElementById('entry-temp-list').classList.remove('hidden');
+                renderTempEntryItems();
 
-            showToast('محصول به لیست ورودی اضافه شد');
+                showToast('محصول به لیست ورودی اضافه شد');
+            }
         }
 
         function renderTempEntryItems() {
@@ -831,12 +889,22 @@
             container.innerHTML = entryInvoices.map((invoice, index) => `
                 <div class="invoice-card">
                     <div class="invoice-header">
-                        <strong>فاکتور ورودی #${invoice.id}</strong>
-                        <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
-                        ${editingInvoice?.type === 'entry' && editingInvoice?.index === index ? 
-                            '<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>' :
-                            '<button class="btn btn-secondary" onclick="editInvoice(\'entry\', ${index})">✏️ ویرایش</button>'
-                        }
+                        <div>
+                            <strong>فاکتور ورودی #${invoice.id}</strong>
+                            ${editingInvoice?.type === 'entry' && editingInvoice?.index === index ? 
+                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${invoice.date}" style="margin-right: 10px; padding: 5px;">` :
+                                `<span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>`
+                            }
+                        </div>
+                        <div class="invoice-actions">
+                            ${editingInvoice?.type === 'entry' && editingInvoice?.index === index ? 
+                                `<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>
+                                 <button class="btn btn-secondary" onclick="cancelInvoiceEdit()">❌ لغو</button>
+                                 <button class="btn btn-info" onclick="addItemToInvoice('entry', ${index})">➕ افزودن محصول</button>` :
+                                `<button class="btn btn-secondary" onclick="editInvoice(\'entry\', ${index})">✏️ ویرایش</button>
+                                 <button class="btn btn-danger" onclick="deleteInvoice('entry', ${index})">🗑️ حذف فاکتور</button>`
+                            }
+                        </div>
                     </div>
                     <div class="invoice-items" id="entry-invoice-${index}">
                         ${renderInvoiceItems(invoice.items, 'entry', index)}
@@ -854,6 +922,7 @@
             
             editingInvoice = { type, index };
             
+            // رندر مجدد برای نمایش حالت ویرایش
             if (type === 'entry') {
                 renderEntryInvoices();
             } else if (type === 'sales151') {
@@ -885,6 +954,12 @@
             }
 
             if (!invoice) return;
+
+            // بروزرسانی تاریخ
+            const dateInput = document.getElementById(`edit-invoice-date-${type}-${index}`);
+            if (dateInput) {
+                invoice.date = dateInput.value || invoice.date;
+            }
 
             // اعتبارسنجی فروش بر اساس موجودی
             if (type === 'sales151' || type === 'sales168') {
@@ -968,6 +1043,47 @@
                 localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
             }
 
+            // رندر مجدد
+            renderEntryInvoices();
+            renderSales151Invoices();
+            renderSales168Invoices();
+            refreshInventory();
+            updateProductSelects();
+
+            showToast('آیتم از فاکتور حذف شد');
+        }
+
+        function deleteInvoice(type, invoiceIndex) {
+            if (!confirm('آیا مطمئن هستید که می‌خواهید این فاکتور را حذف کنید؟')) {
+                return;
+            }
+
+            let invoices;
+            if (type === 'entry') {
+                invoices = entryInvoices;
+            } else if (type === 'sales151') {
+                invoices = salesInvoices151;
+            } else if (type === 'sales168') {
+                invoices = salesInvoices168;
+            }
+
+            if (!invoices || !invoices[invoiceIndex]) return;
+
+            // حذف فاکتور
+            invoices.splice(invoiceIndex, 1);
+
+            // ذخیره در localStorage
+            if (type === 'entry') {
+                localStorage.setItem('entryInvoices', JSON.stringify(entryInvoices));
+            } else if (type === 'sales151') {
+                localStorage.setItem('salesInvoices151', JSON.stringify(salesInvoices151));
+            } else if (type === 'sales168') {
+                localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
+            }
+
+            // بروزرسانی موجودی محصولات
+            updateProductQuantities();
+
             // لغو ویرایش و رندر مجدد
             editingInvoice = null;
             renderEntryInvoices();
@@ -976,7 +1092,70 @@
             refreshInventory();
             updateProductSelects();
 
-            showToast('آیتم از فاکتور حذف شد');
+            showToast('فاکتور با موفقیت حذف شد');
+        }
+
+        function addItemToInvoice(type, invoiceIndex) {
+            // باز کردن فرم افزودن محصول برای فاکتور
+            const invoiceId = type === 'entry' ? 
+                entryInvoices[invoiceIndex]?.id : 
+                type === 'sales151' ? 
+                salesInvoices151[invoiceIndex]?.id : 
+                salesInvoices168[invoiceIndex]?.id;
+            
+            if (!invoiceId) {
+                showToast('فاکتور یافت نشد', 'error');
+                return;
+            }
+
+            // ایجاد متغیر سراسری برای ذخیره هدف فعلی
+            currentAddTarget = { type, invoiceId };
+
+            // فعال کردن فرم افزودن محصول مناسب
+            if (type === 'entry') {
+                showAddProductForm('entry', invoiceId);
+            } else if (type === 'sales151') {
+                showAddProductForm('sales151', invoiceId);
+            } else if (type === 'sales168') {
+                showAddProductForm('sales168', invoiceId);
+            }
+
+            showToast('فرم افزودن محصول باز شد - محصولات به این فاکتور اضافه خواهند شد');
+        }
+
+        function showAddProductForm(type, targetInvoiceId = null) {
+            // لغو ویرایش فعلی
+            editingInvoice = null;
+
+            // نمایش فرم مناسب
+            if (type === 'entry') {
+                const form = document.getElementById('add-product-form-entry');
+                if (form.style.display === 'none' || !form.style.display) {
+                    form.style.display = 'block';
+                    currentAddTarget = targetInvoiceId ? { type, invoiceId: targetInvoiceId } : null;
+                } else {
+                    form.style.display = 'none';
+                    currentAddTarget = null;
+                }
+            } else if (type === 'sales151') {
+                const form = document.getElementById('add-product-form-sales151');
+                if (form.style.display === 'none' || !form.style.display) {
+                    form.style.display = 'block';
+                    currentAddTarget = targetInvoiceId ? { type, invoiceId: targetInvoiceId } : null;
+                } else {
+                    form.style.display = 'none';
+                    currentAddTarget = null;
+                }
+            } else if (type === 'sales168') {
+                const form = document.getElementById('add-product-form-sales168');
+                if (form.style.display === 'none' || !form.style.display) {
+                    form.style.display = 'block';
+                    currentAddTarget = targetInvoiceId ? { type, invoiceId: targetInvoiceId } : null;
+                } else {
+                    form.style.display = 'none';
+                    currentAddTarget = null;
+                }
+            }
         }
 
         function validateEditQuantity(type, invoiceIndex, itemIndex, value) {
@@ -1059,7 +1238,7 @@
             document.getElementById('stock168').value = stock;
         }
 
-        function addSales151() {
+        function addSales151(targetInvoiceId = null) {
             const productId = parseInt(document.getElementById('sales151-product').value);
             const quantity = parseInt(document.getElementById('sales151-quantity').value);
             const product = products.find(p => p.id === productId);
@@ -1075,21 +1254,58 @@
                 return;
             }
 
-            tempSales151Items.push({
-                productId: productId,
-                name: product.name,
-                color: product.color,
-                quantity: quantity
-            });
+            // استفاده از targetInvoiceId ارسال شده یا currentAddTarget
+            const invoiceId = targetInvoiceId || (currentAddTarget?.type === 'sales151' ? currentAddTarget.invoiceId : null);
+            
+            if (invoiceId) {
+                // افزودن به فاکتور موجود
+                const invoice = salesInvoices151.find(inv => inv.id == invoiceId);
+                if (invoice) {
+                    invoice.items.push({
+                        name: product.name,
+                        color: product.color,
+                        quantity: quantity
+                    });
+                    
+                    // بروزرسانی موجودی
+                    product.sales151 += quantity;
+                    
+                    // ذخیره تغییرات
+                    localStorage.setItem('salesInvoices151', JSON.stringify(salesInvoices151));
+                    localStorage.setItem('products', JSON.stringify(products));
+                    
+                    // پاک کردن فرم
+                    document.getElementById('sales151-product').value = '';
+                    document.getElementById('stock151').value = '';
+                    document.getElementById('sales151-quantity').value = '1';
+                    
+                    // رندر مجدد
+                    renderSales151Invoices();
+                    refreshInventory();
+                    updateProductSelects();
+                    
+                    showToast('محصول به فاکتور اضافه شد');
+                } else {
+                    showToast('فاکتور مورد نظر یافت نشد', 'error');
+                }
+            } else {
+                // افزودن به لیست موقت (برای فاکتور جدید)
+                tempSales151Items.push({
+                    productId: productId,
+                    name: product.name,
+                    color: product.color,
+                    quantity: quantity
+                });
 
-            document.getElementById('sales151-product').value = '';
-            document.getElementById('stock151').value = '';
-            document.getElementById('sales151-quantity').value = '1';
+                document.getElementById('sales151-product').value = '';
+                document.getElementById('stock151').value = '';
+                document.getElementById('sales151-quantity').value = '1';
 
-            document.getElementById('sales151-temp-list').classList.remove('hidden');
-            renderTempSales151Items();
+                document.getElementById('sales151-temp-list').classList.remove('hidden');
+                renderTempSales151Items();
 
-            showToast('محصول به لیست فروش اضافه شد');
+                showToast('محصول به لیست فروش اضافه شد');
+            }
         }
 
         function renderTempSales151Items() {
@@ -1159,12 +1375,22 @@
             container.innerHTML = salesInvoices151.map((invoice, index) => `
                 <div class="invoice-card">
                     <div class="invoice-header">
-                        <strong>فاکتور فروش ۱۵۱ #${invoice.id}</strong>
-                        <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
-                        ${editingInvoice?.type === 'sales151' && editingInvoice?.index === index ? 
-                            '<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>' :
-                            '<button class="btn btn-secondary" onclick="editInvoice(\'sales151\', ${index})">✏️ ویرایش</button>'
-                        }
+                        <div>
+                            <strong>فاکتور فروش ۱۵۱ #${invoice.id}</strong>
+                            ${editingInvoice?.type === 'sales151' && editingInvoice?.index === index ? 
+                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${invoice.date}" style="margin-right: 10px; padding: 5px;">` :
+                                `<span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>`
+                            }
+                        </div>
+                        <div class="invoice-actions">
+                            ${editingInvoice?.type === 'sales151' && editingInvoice?.index === index ? 
+                                `<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>
+                                 <button class="btn btn-secondary" onclick="cancelInvoiceEdit()">❌ لغو</button>
+                                 <button class="btn btn-info" onclick="addItemToInvoice('sales151', ${index})">➕ افزودن محصول</button>` :
+                                `<button class="btn btn-secondary" onclick="editInvoice(\'sales151\', ${index})">✏️ ویرایش</button>
+                                 <button class="btn btn-danger" onclick="deleteInvoice('sales151', ${index})">🗑️ حذف فاکتور</button>`
+                            }
+                        </div>
                     </div>
                     <div class="invoice-items" id="sales151-invoice-${index}">
                         ${renderInvoiceItems(invoice.items, 'sales151', index)}
@@ -1174,7 +1400,7 @@
         }
 
         // مدیریت فروش ۱۶۸
-        function addSales168() {
+        function addSales168(targetInvoiceId = null) {
             const productId = parseInt(document.getElementById('sales168-product').value);
             const quantity = parseInt(document.getElementById('sales168-quantity').value);
             const product = products.find(p => p.id === productId);
@@ -1190,21 +1416,58 @@
                 return;
             }
 
-            tempSales168Items.push({
-                productId: productId,
-                name: product.name,
-                color: product.color,
-                quantity: quantity
-            });
+            // استفاده از targetInvoiceId ارسال شده یا currentAddTarget
+            const invoiceId = targetInvoiceId || (currentAddTarget?.type === 'sales168' ? currentAddTarget.invoiceId : null);
+            
+            if (invoiceId) {
+                // افزودن به فاکتور موجود
+                const invoice = salesInvoices168.find(inv => inv.id == invoiceId);
+                if (invoice) {
+                    invoice.items.push({
+                        name: product.name,
+                        color: product.color,
+                        quantity: quantity
+                    });
+                    
+                    // بروزرسانی موجودی
+                    product.sales168 += quantity;
+                    
+                    // ذخیره تغییرات
+                    localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
+                    localStorage.setItem('products', JSON.stringify(products));
+                    
+                    // پاک کردن فرم
+                    document.getElementById('sales168-product').value = '';
+                    document.getElementById('stock168').value = '';
+                    document.getElementById('sales168-quantity').value = '1';
+                    
+                    // رندر مجدد
+                    renderSales168Invoices();
+                    refreshInventory();
+                    updateProductSelects();
+                    
+                    showToast('محصول به فاکتور اضافه شد');
+                } else {
+                    showToast('فاکتور مورد نظر یافت نشد', 'error');
+                }
+            } else {
+                // افزودن به لیست موقت (برای فاکتور جدید)
+                tempSales168Items.push({
+                    productId: productId,
+                    name: product.name,
+                    color: product.color,
+                    quantity: quantity
+                });
 
-            document.getElementById('sales168-product').value = '';
-            document.getElementById('stock168').value = '';
-            document.getElementById('sales168-quantity').value = '1';
+                document.getElementById('sales168-product').value = '';
+                document.getElementById('stock168').value = '';
+                document.getElementById('sales168-quantity').value = '1';
 
-            document.getElementById('sales168-temp-list').classList.remove('hidden');
-            renderTempSales168Items();
+                document.getElementById('sales168-temp-list').classList.remove('hidden');
+                renderTempSales168Items();
 
-            showToast('محصول به لیست فروش اضافه شد');
+                showToast('محصول به لیست فروش اضافه شد');
+            }
         }
 
         function renderTempSales168Items() {
@@ -1274,12 +1537,22 @@
             container.innerHTML = salesInvoices168.map((invoice, index) => `
                 <div class="invoice-card">
                     <div class="invoice-header">
-                        <strong>فاکتور فروش ۱۶۸ #${invoice.id}</strong>
-                        <span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>
-                        ${editingInvoice?.type === 'sales168' && editingInvoice?.index === index ? 
-                            '<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>' :
-                            '<button class="btn btn-secondary" onclick="editInvoice(\'sales168\', ${index})">✏️ ویرایش</button>'
-                        }
+                        <div>
+                            <strong>فاکتور فروش ۱۶۸ #${invoice.id}</strong>
+                            ${editingInvoice?.type === 'sales168' && editingInvoice?.index === index ? 
+                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${invoice.date}" style="margin-right: 10px; padding: 5px;">` :
+                                `<span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>`
+                            }
+                        </div>
+                        <div class="invoice-actions">
+                            ${editingInvoice?.type === 'sales168' && editingInvoice?.index === index ? 
+                                `<button class="btn btn-success" onclick="saveInvoiceEdit()">💾 ذخیره</button>
+                                 <button class="btn btn-secondary" onclick="cancelInvoiceEdit()">❌ لغو</button>
+                                 <button class="btn btn-info" onclick="addItemToInvoice('sales168', ${index})">➕ افزودن محصول</button>` :
+                                `<button class="btn btn-secondary" onclick="editInvoice(\'sales168\', ${index})">✏️ ویرایش</button>
+                                 <button class="btn btn-danger" onclick="deleteInvoice('sales168', ${index})">🗑️ حذف فاکتور</button>`
+                            }
+                        </div>
                     </div>
                     <div class="invoice-items" id="sales168-invoice-${index}">
                         ${renderInvoiceItems(invoice.items, 'sales168', index)}
