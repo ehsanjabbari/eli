@@ -27,6 +27,40 @@
             padding: 20px;
         }
 
+        .data-management {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .sync-status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .sync-status.online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .sync-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .backup-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
         .header {
             text-align: center;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -447,6 +481,7 @@
             <button class="tab" onclick="showTab('sales151')">🏪 فروش ۱۵۱</button>
             <button class="tab" onclick="showTab('sales168')">🏪 فروش ۱۶۸</button>
             <button class="tab" onclick="showTab('inventory')">📊 موجودی</button>
+            <button class="tab" onclick="showTab('data-management')">☁️ مدیریت داده</button>
         </div>
 
         <!-- ورودی Tab -->
@@ -665,6 +700,51 @@
                 </table>
             </div>
         </div>
+
+        <div id="data-management" class="tab-content">
+            <h2 class="section-title">☁️ مدیریت داده و پشتیبان‌گیری</h2>
+            
+            <div class="data-management">
+                <div id="sync-status" class="sync-status offline">
+                    وضعیت همگام‌سازی: آفلاین (فقط LocalStorage)
+                </div>
+                
+                <div class="backup-controls">
+                    <button class="btn btn-primary" onclick="exportData()">📤 خروجی گرفتن از داده‌ها</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(this)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📥 ورودی گرفتن از فایل</button>
+                    <button class="btn btn-info" onclick="setupCloudSync()">☁️ راه‌اندازی همگام‌سازی ابری</button>
+                    <button class="btn btn-warning" onclick="createBackup()">💾 ایجاد پشتیبان محلی</button>
+                    <button class="btn btn-danger" onclick="clearAllData()">🗑️ پاک کردن همه داده‌ها</button>
+                </div>
+            </div>
+
+            <div class="data-management">
+                <h3>🔍 اطلاعات سیستم</h3>
+                <div class="system-info">
+                    <p><strong>تعداد محصولات:</strong> <span id="total-products-info">0</span></p>
+                    <p><strong>تعداد فاکتورهای ورودی:</strong> <span id="entry-invoices-count">0</span></p>
+                    <p><strong>تعداد فاکتورهای فروش 151:</strong> <span id="sales151-invoices-count">0</span></p>
+                    <p><strong>تعداد فاکتورهای فروش 168:</strong> <span id="sales168-invoices-count">0</span></p>
+                    <p><strong>آخرین ذخیره‌سازی:</strong> <span id="last-save-time">نامشخص</span></p>
+                    <p><strong>فضای اشغال شده:</strong> <span id="storage-size">0 KB</span></p>
+                </div>
+            </div>
+
+            <div class="data-management">
+                <h3>🌐 گزینه‌های همگام‌سازی ابری</h3>
+                <div class="cloud-options">
+                    <button class="btn btn-primary" onclick="setupFirebase()">🔥 Firebase (گوگل)</button>
+                    <button class="btn btn-success" onclick="setupSupabase()">⚡ Supabase</button>
+                    <button class="btn btn-dark" onclick="setupGitHub()">📱 GitHub Gist</button>
+                    <button class="btn btn-info" onclick="setupLocalStorageBackup()">💾 LocalStorage Enhanced</button>
+                </div>
+                <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+                    💡 <strong>راهنما:</strong> برای همگام‌سازی بین دستگاه‌ها، یکی از گزینه‌های بالا را انتخاب کنید. 
+                    Firebase و Supabase رایگان هستند و نیاز به ثبت‌نام دارند.
+                </p>
+            </div>
+        </div>
     </div>
 
     <div id="toast" class="toast"></div>
@@ -680,7 +760,301 @@
         let tempSales168Items = [];
         let editingInvoice = null; // { type: 'entry'|'sales151'|'sales168', index: number }
         let currentAddTarget = null; // { type: 'entry'|'sales151'|'sales168', invoiceId: number }
+        
+        // متغیرهای مدیریت داده
+        let cloudSync = {
+            enabled: false,
+            provider: null, // 'firebase', 'supabase', 'github', 'localStorage'
+            config: null,
+            lastSync: null
+        };
+        let autoBackup = {
+            enabled: true,
+            interval: 3600000, // هر ساعت
+            lastBackup: null
+        };
 
+        // ========== مدیریت داده و پشتیبان‌گیری ==========
+        
+        // تابع خروجی گرفتن از داده‌ها
+        function exportData() {
+            const data = {
+                products: products,
+                entryInvoices: entryInvoices,
+                salesInvoices151: salesInvoices151,
+                salesInvoices168: salesInvoices168,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `elishoes-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showToast('فایل پشتیبان با موفقیت دانلود شد');
+        }
+        
+        // تابع ورودی گرفتن از فایل
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!confirm('آیا از جایگزینی داده‌های فعلی با این فایل اطمینان دارید؟')) {
+                        return;
+                    }
+                    
+                    // اعتبارسنجی داده‌ها
+                    if (data.products && Array.isArray(data.products)) {
+                        products = data.products;
+                        localStorage.setItem('products', JSON.stringify(products));
+                    }
+                    
+                    if (data.entryInvoices && Array.isArray(data.entryInvoices)) {
+                        entryInvoices = data.entryInvoices;
+                        localStorage.setItem('entryInvoices', JSON.stringify(entryInvoices));
+                    }
+                    
+                    if (data.salesInvoices151 && Array.isArray(data.salesInvoices151)) {
+                        salesInvoices151 = data.salesInvoices151;
+                        localStorage.setItem('salesInvoices151', JSON.stringify(salesInvoices151));
+                    }
+                    
+                    if (data.salesInvoices168 && Array.isArray(data.salesInvoices168)) {
+                        salesInvoices168 = data.salesInvoices168;
+                        localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
+                    }
+                    
+                    // به‌روزرسانی UI
+                    refreshInventory();
+                    renderEntryInvoices();
+                    renderSales151Invoices();
+                    renderSales168Invoices();
+                    updateSystemInfo();
+                    
+                    showToast('داده‌ها با موفقیت وارد شدند');
+                    input.value = ''; // پاک کردن فایل انتخاب شده
+                    
+                } catch (error) {
+                    console.error('خطا در خواندن فایل:', error);
+                    showToast('خطا در خواندن فایل. لطفاً فرمت صحیح را بررسی کنید.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // تابع ایجاد پشتیبان محلی
+        function createBackup() {
+            const timestamp = new Date().toLocaleString('fa-IR');
+            const backup = {
+                products: products,
+                entryInvoices: entryInvoices,
+                salesInvoices151: salesInvoices151,
+                salesInvoices168: salesInvoices168,
+                backupDate: timestamp,
+                version: '1.0'
+            };
+            
+            // ذخیره در localStorage با کلید مخصوص
+            localStorage.setItem('elishoes_backup', JSON.stringify(backup));
+            localStorage.setItem('elishoes_last_backup', timestamp);
+            
+            // نمایش اندازه پشتیبان
+            const backupSize = JSON.stringify(backup).length;
+            const sizeKB = (backupSize / 1024).toFixed(2);
+            
+            showToast(`پشتیبان محلی ایجاد شد (${sizeKB} KB)`);
+            updateSystemInfo();
+        }
+        
+        // تابع پاک کردن همه داده‌ها
+        function clearAllData() {
+            if (!confirm('آیا از پاک کردن همه داده‌ها اطمینان دارید؟ این عمل غیرقابل بازگشت است!')) {
+                return;
+            }
+            
+            if (!confirm('این آخرین هشدار است! تمام محصولات و فاکتورها پاک خواهند شد.')) {
+                return;
+            }
+            
+            // پاک کردن همه داده‌ها
+            localStorage.removeItem('products');
+            localStorage.removeItem('entryInvoices');
+            localStorage.removeItem('salesInvoices151');
+            localStorage.removeItem('salesInvoices168');
+            localStorage.removeItem('elishoes_backup');
+            localStorage.removeItem('elishoes_last_backup');
+            
+            // ریست کردن متغیرها
+            products = [];
+            entryInvoices = [];
+            salesInvoices151 = [];
+            salesInvoices168 = [];
+            tempEntryItems = [];
+            tempSales151Items = [];
+            tempSales168Items = [];
+            editingInvoice = null;
+            currentAddTarget = null;
+            
+            // به‌روزرسانی UI
+            refreshInventory();
+            renderEntryInvoices();
+            renderSales151Invoices();
+            renderSales168Invoices();
+            updateSystemInfo();
+            
+            showToast('همه داده‌ها پاک شدند');
+        }
+        
+        // تابع به‌روزرسانی اطلاعات سیستم
+        function updateSystemInfo() {
+            const lastSave = localStorage.getItem('elishoes_last_backup') || 'نامشخص';
+            
+            document.getElementById('total-products-info').textContent = products.length;
+            document.getElementById('entry-invoices-count').textContent = entryInvoices.length;
+            document.getElementById('sales151-invoices-count').textContent = salesInvoices151.length;
+            document.getElementById('sales168-invoices-count').textContent = salesInvoices168.length;
+            document.getElementById('last-save-time').textContent = lastSave;
+            
+            // محاسبه اندازه ذخیره‌سازی
+            let totalSize = 0;
+            const keys = ['products', 'entryInvoices', 'salesInvoices151', 'salesInvoices168', 'elishoes_backup'];
+            keys.forEach(key => {
+                const item = localStorage.getItem(key);
+                if (item) totalSize += item.length;
+            });
+            
+            const sizeKB = (totalSize / 1024).toFixed(2);
+            document.getElementById('storage-size').textContent = `${sizeKB} KB`;
+        }
+        
+        // ========== تنظیمات همگام‌سازی ابری ==========
+        
+        // راه‌اندازی همگام‌سازی ابری
+        function setupCloudSync() {
+            alert('لطفاً یکی از گزینه‌های همگام‌سازی را انتخاب کنید:\n\n' +
+                  '🔥 Firebase: پایگاه داده گوگل (رایگان)\n' +
+                  '⚡ Supabase: جایگزین متن‌باز Firebase\n' +
+                  '📱 GitHub: استفاده از GitHub Gist\n' +
+                  '💾 LocalStorage Enhanced: بهبود localStorage');
+        }
+        
+        // تنظیم Firebase
+        function setupFirebase() {
+            const message = `برای راه‌اندازی Firebase:
+
+1. به https://console.firebase.google.com بروید
+2. پروژه جدید ایجاد کنید
+3. Firestore Database فعال کنید
+4. API Key و config را کپی کنید
+5. کد Firebase SDK را به این پروژه اضافه کنید
+
+آیا می‌خواهید راهنمای کامل Firebase نمایش داده شود؟`;
+            
+            if (confirm(message)) {
+                window.open('https://firebase.google.com/docs/firestore/quickstart', '_blank');
+            }
+        }
+        
+        // تنظیم Supabase
+        function setupSupabase() {
+            const message = `برای راه‌اندازی Supabase:
+
+1. به https://supabase.com بروید
+2. حساب جدید ایجاد کنید
+3. پروژه جدید بسازید
+4. Table ایجاد کنید با نام 'elishoes_data'
+5. API URL و anon key را کپی کنید
+
+آیا می‌خواهید راهنمای کامل Supabase نمایش داده شود؟`;
+            
+            if (confirm(message)) {
+                window.open('https://supabase.com/docs/guides/getting-started/quickstarts/js', '_blank');
+            }
+        }
+        
+        // تنظیم GitHub
+        function setupGitHub() {
+            const message = `برای راه‌اندازی GitHub Gist:
+
+1. Personal Access Token از GitHub دریافت کنید
+2. Gist جدید ایجاد کنید
+3. Token و Gist ID را تنظیم کنید
+4. کد GitHub API به پروژه اضافه می‌شود
+
+آیا می‌خواهید راهنمای کامل GitHub API نمایش داده شود؟`;
+            
+            if (confirm(message)) {
+                window.open('https://docs.github.com/en/rest/gists/gists', '_blank');
+            }
+        }
+        
+        // بهبود LocalStorage
+        function setupLocalStorageBackup() {
+            // فعال‌سازی backup خودکار
+            autoBackup.enabled = true;
+            autoBackup.lastBackup = new Date().toISOString();
+            
+            // ذخیره تنظیمات
+            localStorage.setItem('elishoes_autobackup', JSON.stringify(autoBackup));
+            
+            // شروع backup خودکار
+            setInterval(() => {
+                if (autoBackup.enabled) {
+                    createBackup();
+                }
+            }, autoBackup.interval);
+            
+            cloudSync.enabled = true;
+            cloudSync.provider = 'localStorage';
+            cloudSync.lastSync = new Date().toISOString();
+            
+            localStorage.setItem('elishoes_cloud_sync', JSON.stringify(cloudSync));
+            
+            // به‌روزرسانی status
+            updateSyncStatus();
+            showToast('پشتیبان‌گیری خودکار فعال شد (هر ساعت)');
+        }
+        
+        // به‌روزرسانی وضعیت همگام‌سازی
+        function updateSyncStatus() {
+            const statusEl = document.getElementById('sync-status');
+            const savedConfig = localStorage.getItem('elishoes_cloud_sync');
+            
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                if (config.enabled && config.provider) {
+                    statusEl.className = 'sync-status online';
+                    statusEl.textContent = `وضعیت همگام‌سازی: آنلاین (${getProviderName(config.provider)})`;
+                    return;
+                }
+            }
+            
+            statusEl.className = 'sync-status offline';
+            statusEl.textContent = 'وضعیت همگام‌سازی: آفلاین (فقط LocalStorage)';
+        }
+        
+        // نام ارائه‌دهنده
+        function getProviderName(provider) {
+            const names = {
+                'firebase': 'Firebase',
+                'supabase': 'Supabase',
+                'github': 'GitHub',
+                'localStorage': 'LocalStorage Enhanced'
+            };
+            return names[provider] || provider;
+        }
+        
+        // ========== پایان مدیریت داده ==========
+        
         // تابع نمایش تب
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -691,6 +1065,9 @@
             
             if (tabName === 'inventory') {
                 refreshInventory();
+            } else if (tabName === 'data-management') {
+                updateSystemInfo();
+                updateSyncStatus();
             }
         }
 
@@ -784,6 +1161,9 @@
                     localStorage.setItem('entryInvoices', JSON.stringify(entryInvoices));
                     localStorage.setItem('products', JSON.stringify(products));
                     
+                    // backup خودکار
+                    autoBackup();
+                    
                     // پاک کردن فرم
                     document.getElementById('entry-product-name').value = '';
                     document.getElementById('entry-product-color').value = '';
@@ -862,6 +1242,9 @@
             });
 
             localStorage.setItem('products', JSON.stringify(products));
+            
+            // backup خودکار
+            autoBackup();
 
             // پاک کردن لیست موقت
             tempEntryItems = [];
@@ -1000,6 +1383,9 @@
             } else if (type === 'sales168') {
                 localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
             }
+            
+            // backup خودکار
+            autoBackup();
 
             // بروزرسانی موجودی محصولات
             updateProductQuantities(type, index);
@@ -1042,6 +1428,9 @@
             } else if (type === 'sales168') {
                 localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
             }
+            
+            // backup خودکار
+            autoBackup();
 
             // رندر مجدد
             renderEntryInvoices();
@@ -1080,6 +1469,9 @@
             } else if (type === 'sales168') {
                 localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
             }
+            
+            // backup خودکار
+            autoBackup();
 
             // بروزرسانی موجودی محصولات
             updateProductQuantities();
@@ -1207,7 +1599,24 @@
             localStorage.setItem('products', JSON.stringify(products));
         }
 
-        // مدیریت فروش ۱۵۱
+        
+        // ========== توابع کمکی ==========
+        
+        // تابع backup خودکار
+        function autoBackup() {
+            if (autoBackup.enabled) {
+                const now = new Date().getTime();
+                const lastBackup = autoBackup.lastBackup ? new Date(autoBackup.lastBackup).getTime() : 0;
+                
+                if (now - lastBackup >= autoBackup.interval) {
+                    createBackup();
+                    autoBackup.lastBackup = now.toISOString();
+                    localStorage.setItem('elishoes_autobackup', JSON.stringify(autoBackup));
+                }
+            }
+        }
+        
+        // ========== مدیریت فروش ۱۵۱ ==========
         function updateProductSelects() {
             const select151 = document.getElementById('sales151-product');
             const select168 = document.getElementById('sales168-product');
@@ -1273,6 +1682,9 @@
                     // ذخیره تغییرات
                     localStorage.setItem('salesInvoices151', JSON.stringify(salesInvoices151));
                     localStorage.setItem('products', JSON.stringify(products));
+                    
+                    // backup خودکار
+                    autoBackup();
                     
                     // پاک کردن فرم
                     document.getElementById('sales151-product').value = '';
@@ -1350,6 +1762,9 @@
             });
 
             localStorage.setItem('products', JSON.stringify(products));
+            
+            // backup خودکار
+            autoBackup();
 
             tempSales151Items = [];
             document.getElementById('sales151-temp-list').classList.add('hidden');
@@ -1436,6 +1851,9 @@
                     localStorage.setItem('salesInvoices168', JSON.stringify(salesInvoices168));
                     localStorage.setItem('products', JSON.stringify(products));
                     
+                    // backup خودکار
+                    autoBackup();
+                    
                     // پاک کردن فرم
                     document.getElementById('sales168-product').value = '';
                     document.getElementById('stock168').value = '';
@@ -1512,6 +1930,9 @@
             });
 
             localStorage.setItem('products', JSON.stringify(products));
+            
+            // backup خودکار
+            autoBackup();
 
             tempSales168Items = [];
             document.getElementById('sales168-temp-list').classList.add('hidden');
@@ -1598,6 +2019,9 @@
 
             products.push(newProduct);
             localStorage.setItem('products', JSON.stringify(products));
+            
+            // backup خودکار
+            autoBackup();
 
             hideAddProduct();
             showToast('محصول جدید اضافه شد');
@@ -1646,11 +2070,42 @@
 
         // بارگذاری اولیه
         function init() {
+            // بارگذاری تنظیمات cloud sync
+            const savedConfig = localStorage.getItem('elishoes_cloud_sync');
+            if (savedConfig) {
+                try {
+                    cloudSync = { ...cloudSync, ...JSON.parse(savedConfig) };
+                } catch (e) {
+                    console.error('خطا در بارگذاری تنظیمات sync:', e);
+                }
+            }
+            
+            // بارگذاری تنظیمات auto backup
+            const savedBackup = localStorage.getItem('elishoes_autobackup');
+            if (savedBackup) {
+                try {
+                    autoBackup = { ...autoBackup, ...JSON.parse(savedBackup) };
+                } catch (e) {
+                    console.error('خطا در بارگذاری تنظیمات backup:', e);
+                }
+            }
+            
+            // شروع backup خودکار اگر فعال باشد
+            if (autoBackup.enabled) {
+                setInterval(() => {
+                    if (autoBackup.enabled) {
+                        createBackup();
+                    }
+                }, autoBackup.interval);
+            }
+            
             renderEntryInvoices();
             renderSales151Invoices();
             renderSales168Invoices();
             updateProductSelects();
             refreshInventory();
+            updateSystemInfo();
+            updateSyncStatus();
         }
 
         // شروع برنامه
