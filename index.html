@@ -509,6 +509,10 @@
                         <label>تعداد</label>
                         <input type="number" id="entry-quantity" min="1" value="1">
                     </div>
+                    <div class="form-group">
+                        <label>تاریخ فاکتور</label>
+                        <input type="date" id="entry-invoice-date">
+                    </div>
                     <div class="form-group" style="width: auto;">
                         <label>&nbsp;</label>
                         <button class="btn btn-success" onclick="addEntry()">➕ افزودن</button>
@@ -525,6 +529,7 @@
                                 <th>نام محصول</th>
                                 <th>رنگ</th>
                                 <th>تعداد</th>
+                                <th>تاریخ فاکتور</th>
                                 <th>عملیات</th>
                             </tr>
                         </thead>
@@ -1442,6 +1447,7 @@
             const name = document.getElementById('entry-product-name').value.trim();
             const color = document.getElementById('entry-product-color').value.trim();
             const quantity = parseInt(document.getElementById('entry-quantity').value);
+            const invoiceDate = document.getElementById('entry-invoice-date').value || new Date().toISOString().split('T')[0];
 
             if (!name || !color || quantity <= 0) {
                 showToast('لطفاً تمام فیلدها را پر کنید', 'error');
@@ -1511,7 +1517,8 @@
                     productId: product.id,
                     name: name,
                     color: color,
-                    quantity: quantity
+                    quantity: quantity,
+                    invoiceDate: invoiceDate  // ذخیره تاریخ در آیتم موقت
                 });
 
                 // پاک کردن فرم
@@ -1533,6 +1540,7 @@
                     <td>${item.name}</td>
                     <td>${item.color}</td>
                     <td>${item.quantity}</td>
+                    <td>${item.invoiceDate || new Date().toLocaleDateString('fa-IR')}</td>
                     <td><button class="btn btn-danger" onclick="removeTempEntryItem(${index})">🗑️ حذف</button></td>
                 </tr>
             `).join('');
@@ -1550,10 +1558,17 @@
         function saveEntry() {
             if (tempEntryItems.length === 0) return;
 
+            // استفاده از تاریخ اولین آیتم (چون همه آیتم‌ها باید همان تاریخ داشته باشند)
+            const invoiceDate = tempEntryItems[0].invoiceDate || new Date().toISOString().split('T')[0];
+            
             const invoice = {
                 id: Date.now(),
-                date: new Date().toISOString(),
-                items: [...tempEntryItems]
+                date: invoiceDate,  // استفاده از تاریخ انتخاب شده
+                items: tempEntryItems.map(item => ({
+                    name: item.name,
+                    color: item.color,
+                    quantity: item.quantity
+                }))
             };
 
             entryInvoices.push(invoice);
@@ -1983,6 +1998,16 @@
             document.getElementById('entry-product-name').value = '';
             document.getElementById('entry-product-color').value = '';
             document.getElementById('entry-quantity').value = '1';
+            setDefaultInvoiceDate();
+        }
+
+        function setDefaultInvoiceDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const todayString = `${year}-${month}-${day}`;
+            document.getElementById('entry-invoice-date').value = todayString;
         }
         
         // ========== مدیریت فروش ۱۵۱ ==========
@@ -2473,6 +2498,7 @@
             renderSales168Invoices();
             updateProductSelects();
             updateEntryProductSelect();
+            setDefaultInvoiceDate();  // تنظیم تاریخ پیش‌فرض
             refreshInventory();
             updateSystemInfo();
             updateSyncStatus();
