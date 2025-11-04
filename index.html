@@ -750,12 +750,13 @@
                 <h3>🔗 همگام‌سازی GitHub</h3>
                 <p>لطفاً دکمه‌های زیر را برای همگام‌سازی داده‌ها با GitHub استفاده کنید:</p>
                 <div class="cloud-options">
+                    <button class="btn btn-info" onclick="testGitHubConnectionWithSavedConfig()">🔄 تست اتصال GitHub</button>
                     <button class="btn btn-primary" onclick="syncToGitHub()">⬆️ ارسال به GitHub</button>
                     <button class="btn btn-success" onclick="syncFromGitHub()">⬇️ دریافت از GitHub</button>
                 </div>
                 <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
-                    💡 <strong>نکته:</strong> قبل از استفاده، GitHub را تنظیم کنید. 
-                    "ارسال به GitHub" اطلاعات فعلی را ذخیره می‌کند و "دریافت از GitHub" اطلاعات سرور را بارگیری می‌کند.
+                    💡 <strong>نکته:</strong> "تست اتصال" وضعیت GitHub را بررسی می‌کند. 
+                    اگر خطای 401 می‌گیرید، Token جدید بسازید.
                 </p>
             </div>
         </div>
@@ -1058,10 +1059,26 @@
         
         // تنظیم GitHub
         function setupGitHub() {
-            // درخواست Personal Access Token
-            const token = prompt('لطفاً Personal Access Token از GitHub را وارد کنید:\n\nراهنما:\n1. به github.com بروید\n2. Settings → Developer settings → Personal access tokens\n3. Generate new token (classic)\n4. scopes: gist را انتخاب کنید\n5. Token را کپی و اینجا وارد کنید');
+            const savedConfig = localStorage.getItem('elishoes_cloud_sync');
             
-            if (!token) return;
+            // اگر تنظیمات قبلی موجود باشد، فقط تست کن
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                if (config.enabled && config.provider === 'github' && config.config) {
+                    // تست اتصال با تنظیمات موجود
+                    testGitHubConnection(config.config.token, config.config.gistId);
+                    return;
+                }
+            }
+            
+            // اگر تنظیمات نباشد، درخواست جدید کن
+            // درخواست Personal Access Token
+            const token = prompt('لطفاً Personal Access Token از GitHub را وارد کنید:\n\nراهنما:\n1. به github.com بروید\n2. Settings → Developer settings → Personal access tokens\n3. Generate new token (classic)\n4. scopes: gist را انتخاب کنید\n5. Token را کپی و اینجا وارد کنید\n\n💡 نکته: اگر تنظیمات قبلی دارید، کلید Cancel را بزنید');
+            
+            if (!token) {
+                showToast('عملیات لغو شد. اگر تنظیمات قبلی دارید، از دکمه "🔄 تست اتصال GitHub" استفاده کنید', 'info');
+                return;
+            }
             
             // درخواست Gist ID
             const gistId = prompt('لطفاً ID گیست GitHub را وارد کنید:\n\nراهنما:\n1. gist.github.com بروید\n2. گیست جدید بسازید یا گیست موجود را باز کنید\n3. URL گیست را کپی کنید (مثل: https://gist.github.com/username/abc123def456)\n4. ID گیست (abc123def456) را اینجا وارد کنید');
@@ -1070,6 +1087,25 @@
             
             // تست اتصال
             testGitHubConnection(token, gistId);
+        }
+        
+        // تابع تست اتصال GitHub با تنظیمات موجود
+        function testGitHubConnectionWithSavedConfig() {
+            const savedConfig = localStorage.getItem('elishoes_cloud_sync');
+            
+            if (!savedConfig) {
+                alert('ابتدا GitHub را تنظیم کنید');
+                return;
+            }
+            
+            const config = JSON.parse(savedConfig);
+            if (!config.enabled || config.provider !== 'github' || !config.config) {
+                alert('تنظیمات GitHub نامعتبر است. لطفاً دوباره تنظیم کنید');
+                return;
+            }
+            
+            showToast('در حال تست اتصال...', 'info');
+            testGitHubConnection(config.config.token, config.config.gistId);
         }
         
         // تست اتصال گیت هاب
