@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست فاکتور ورودی</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .hidden {
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f8f9fa;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تست سیستم فاکتور ورودی</h1>
+        
+        <div class="form-section">
+            <div class="form-group">
+                <label>نام محصول</label>
+                <input type="text" id="test-name" value="کفش اسپورت">
+            </div>
+            <div class="form-group">
+                <label>رنگ</label>
+                <input type="text" id="test-color" value="مشکی">
+            </div>
+            <div class="form-group">
+                <label>تعداد</label>
+                <input type="number" id="test-quantity" value="1">
+            </div>
+            <div class="form-group">
+                <label>تاریخ فاکتور</label>
+                <input type="date" id="test-date">
+            </div>
+            
+            <button class="btn btn-primary" onclick="testFunctions()">تست توابع</button>
+            <button class="btn btn-success" onclick="testAdd()">تست افزودن</button>
+        </div>
+        
+        <div id="test-result" style="margin-top: 20px;"></div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // متغیرهای شبیه‌سازی شده
+        let products = [];
+        let tempEntryItems = [];
+        let entryInvoices = [];
+        let currentAddTarget = null;
+        let editingInvoice = null;
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function testFunctions() {
+            let result = '<h3>نتایج تست:</h3>';
+            
+            // تست متغیرها
+            result += `<p><strong>متغیر products:</strong> ${JSON.stringify(products)}</p>`;
+            result += `<p><strong>متغیر tempEntryItems:</strong> ${JSON.stringify(tempEntryItems)}</p>`;
+            result += `<p><strong>متغیر entryInvoices:</strong> ${JSON.stringify(entryInvoices)}</p>`;
+            
+            // تست توابع
+            result += `<p><strong>تابع clearEntryForm:</strong> ${typeof clearEntryForm}</p>`;
+            result += `<p><strong>تابع updateEntryProductSelect:</strong> ${typeof updateEntryProductSelect}</p>`;
+            result += `<p><strong>تابع addEntry:</strong> ${typeof addEntry}</p>`;
+            result += `<p><strong>تابع saveEntry:</strong> ${typeof saveEntry}</p>`;
+            
+            // تست DOM
+            const nameEl = document.getElementById('test-name');
+            const colorEl = document.getElementById('test-color');
+            result += `<p><strong>فیلد نام:</strong> ${nameEl ? nameEl.value : 'نامیافت'}</p>`;
+            result += `<p><strong>فیلد رنگ:</strong> ${colorEl ? colorEl.value : 'نامیافت'}</p>`;
+            
+            document.getElementById('test-result').innerHTML = result;
+        }
+
+        function testAdd() {
+            const name = document.getElementById('test-name').value.trim();
+            const color = document.getElementById('test-color').value.trim();
+            const quantity = parseInt(document.getElementById('test-quantity').value);
+            const rawDate = document.getElementById('test-date').value;
+            const invoiceDate = rawDate || new Date().toISOString().split('T')[0];
+
+            if (!name || !color || quantity <= 0) {
+                showToast('لطفاً تمام فیلدها را پر کنید', 'error');
+                return;
+            }
+
+            // جستجوی محصول موجود
+            let product = products.find(p => p.name === name && p.color === color);
+            
+            if (!product) {
+                // محصول جدید
+                product = {
+                    id: Date.now(),
+                    name: name,
+                    color: color,
+                    entry: 0,
+                    sales151: 0,
+                    sales168: 0
+                };
+                products.push(product);
+            }
+
+            // افزودن به لیست موقت
+            tempEntryItems.push({
+                productId: product.id,
+                name: name,
+                color: color,
+                quantity: quantity,
+                invoiceDate: invoiceDate
+            });
+
+            showToast('تست افزودن محصول موفق بود!');
+            
+            document.getElementById('test-result').innerHTML = `
+                <h3>نتیجه تست افزودن:</h3>
+                <p><strong>محصول اضافه شد:</strong> ${name} - ${color} (تعداد: ${quantity})</p>
+                <p><strong>تاریخ:</strong> ${invoiceDate}</p>
+                <p><strong>تعداد آیتم‌های موقت:</strong> ${tempEntryItems.length}</p>
+                <p><strong>آیتم‌های موقت:</strong></p>
+                <pre>${JSON.stringify(tempEntryItems, null, 2)}</pre>
+            `;
+        }
+
+        // تست تاریخ
+        function setDefaultInvoiceDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('test-date').value = today;
+        }
+
+        // اجرای خودکار در بارگذاری
+        window.onload = function() {
+            setDefaultInvoiceDate();
+            showToast('صفحه تست بارگذاری شد');
+        };
+    </script>
+</body>
+</html>
