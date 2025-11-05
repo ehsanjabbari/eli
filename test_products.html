@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست ایجاد محصولات نمونه</title>
+    <style>
+        body { font-family: Arial; padding: 20px; direction: rtl; }
+        .product { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .btn { background: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
+        .btn:hover { background: #45a049; }
+        .info { background: #f9f9f9; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🎯 ایجاد محصولات نمونه برای تست سیستم</h1>
+    
+    <div class="info">
+        <h3>دستورالعمل:</h3>
+        <ol>
+            <li>ابتدا روی دکمه "ایجاد محصولات نمونه" کلیک کنید</li>
+            <li>سپس صفحه <a href="http://localhost:8003" target="_blank">سیستم اصلی</a> را باز کنید</li>
+            <li>در تب "ورود محصولات" dropdown محصولات را بررسی کنید</li>
+        </ol>
+    </div>
+
+    <button class="btn" onclick="createSampleProducts()">🔨 ایجاد محصولات نمونه</button>
+    
+    <div id="products-list"></div>
+    <div id="message" style="margin-top: 20px;"></div>
+
+    <script>
+        // محصولات نمونه
+        const sampleProducts = [
+            {
+                id: Date.now() + 1,
+                name: "کفش کتانی زنانه ورزشی",
+                color: "سفید",
+                size: "37-40",
+                price: 2500000,
+                stock: 15,
+                category: "ورزشی"
+            },
+            {
+                id: Date.now() + 2,
+                name: "کفش مجلسی پاشنه بلند",
+                color: "سیاه",
+                size: "36-39",
+                price: 1800000,
+                stock: 8,
+                category: "مجلسی"
+            },
+            {
+                id: Date.now() + 3,
+                name: "کفش روزمره بندی",
+                color: "قهوه‌ای",
+                size: "35-42",
+                price: 1200000,
+                stock: 22,
+                category: "روزمره"
+            },
+            {
+                id: Date.now() + 4,
+                name: "کفش بوت زمستانی",
+                color: "مشکی",
+                size: "36-43",
+                price: 3200000,
+                stock: 12,
+                category: "زمستانی"
+            },
+            {
+                id: Date.now() + 5,
+                name: "صندل تابستانی",
+                color: "رنگارنگ",
+                size: "35-41",
+                price: 800000,
+                stock: 35,
+                category: "تابستانی"
+            }
+        ];
+
+        function createSampleProducts() {
+            try {
+                // محصولات موجود را بگیر
+                let existingProducts = [];
+                try {
+                    existingProducts = JSON.parse(localStorage.getItem('elishoes_products') || '[]');
+                } catch (e) {
+                    console.error('خطا در خواندن محصولات:', e);
+                }
+
+                // محصولات نمونه را اضافه کن (فقط اگر قبلاً وجود ندارند)
+                const existingNames = existingProducts.map(p => p.name + ' ' + p.color);
+                const productsToAdd = sampleProducts.filter(p => 
+                    !existingNames.includes(p.name + ' ' + p.color)
+                );
+
+                // اگر محصولی وجود نداشت، آن را اضافه کن
+                if (productsToAdd.length > 0) {
+                    const allProducts = [...existingProducts, ...productsToAdd];
+                    localStorage.setItem('elishoes_products', JSON.stringify(allProducts));
+                    showMessage('✅ محصولات نمونه با موفقیت ایجاد شدند!', 'success');
+                    displayProducts();
+                } else {
+                    showMessage('⚠️ محصولات نمونه قبلاً وجود دارند', 'warning');
+                }
+                
+            } catch (error) {
+                showMessage('❌ خطا در ایجاد محصولات: ' + error.message, 'error');
+            }
+        }
+
+        function displayProducts() {
+            const productsList = document.getElementById('products-list');
+            const products = JSON.parse(localStorage.getItem('elishoes_products') || '[]');
+            
+            productsList.innerHTML = `
+                <h3>📦 محصولات موجود (${products.length} محصول):</h3>
+                ${products.map(product => `
+                    <div class="product">
+                        <strong>${product.name}</strong> - ${product.color}
+                        <br>موجودی فعلی: ${product.stock} عدد
+                        <br>قیمت: ${product.price.toLocaleString('fa-IR')} تومان
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div style="padding: 10px; border-radius: 5px; background: ${type === 'success' ? '#d4edda' : type === 'warning' ? '#fff3cd' : '#f8d7da'}; color: ${type === 'success' ? '#155724' : type === 'warning' ? '#856404' : '#721c24'};">${msg}</div>`;
+        }
+
+        // نمایش محصولات موجود در بارگذاری صفحه
+        displayProducts();
+    </script>
+</body>
+</html>

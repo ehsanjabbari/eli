@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست کامل سیستم انبارداری</title>
+    <style>
+        body { 
+            font-family: 'Vazirmatn', sans-serif; 
+            padding: 20px; 
+            direction: rtl; 
+            background: #f5f5f5;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { 
+            background: white; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn { 
+            background: #4CAF50; 
+            color: white; 
+            padding: 12px 24px; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 5px; 
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .btn:hover { background: #45a049; }
+        .btn.primary { background: #007bff; }
+        .btn.primary:hover { background: #0056b3; }
+        .btn.warning { background: #ffc107; color: #212529; }
+        .btn.warning:hover { background: #e0a800; }
+        .product { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            background: #f9f9f9;
+        }
+        .info { 
+            background: #e7f3ff; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            border-right: 4px solid #007bff;
+        }
+        .success { background: #d4edda; border-right-color: #28a745; }
+        .warning { background: #fff3cd; border-right-color: #ffc107; }
+        .error { background: #f8d7da; border-right-color: #dc3545; }
+        .test-steps { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 10px 0;
+        }
+        .step { margin: 10px 0; padding: 10px; background: white; border-radius: 5px; }
+        .completed { background: #d4edda; }
+        .current { background: #fff3cd; border: 2px solid #ffc107; }
+        iframe { 
+            width: 100%; 
+            height: 600px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 تست کامل سیستم انبارداری کفش</h1>
+        
+        <div class="info">
+            <h3>📋 مراحل تست:</h3>
+            <ol>
+                <li>ایجاد محصولات نمونه در localStorage</li>
+                <li>تنظیم تاریخ شمسی سیستم</li>
+                <li>تست dropdown انتخاب محصول</li>
+                <li>ایجاد فاکتور ورودی با تاریخ دیروز</li>
+                <li>تست چندین محصول در یک فاکتور</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h3>🔧 ابزارهای تست</h3>
+            <button class="btn" onclick="step1_createProducts()">1️⃣ ایجاد محصولات نمونه</button>
+            <button class="btn" onclick="step2_setPersianDate()">2️⃣ تنظیم تاریخ شمسی</button>
+            <button class="btn primary" onclick="openMainSystem()">🚀 باز کردن سیستم اصلی</button>
+            <button class="btn warning" onclick="clearAllData()">🗑️ پاک کردن تمام داده‌ها</button>
+        </div>
+
+        <div class="section">
+            <h3>📊 وضعیت تست</h3>
+            <div id="test-status">
+                <div class="step" id="step1">مرحله 1: ایجاد محصولات نمونه</div>
+                <div class="step" id="step2">مرحله 2: تنظیم تاریخ شمسی</div>
+                <div class="step" id="step3">مرحله 3: تست dropdown محصولات</div>
+                <div class="step" id="step4">مرحله 4: ایجاد فاکتور نمونه</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📦 محصولات موجود</h3>
+            <div id="products-list">هنوز محصولی ایجاد نشده</div>
+        </div>
+
+        <div class="section">
+            <h3>💡 راهنمای استفاده</h3>
+            <div class="test-steps">
+                <h4>پس از ایجاد محصولات:</h4>
+                <ol>
+                    <li>روی "باز کردن سیستم اصلی" کلیک کنید</li>
+                    <li>به تب "ورود محصولات" بروید</li>
+                    <li>از dropdown "انتخاب محصول موجود" یکی را انتخاب کنید</li>
+                    <li>تعداد را وارد کنید</li>
+                    <li>تاریخ فاکتور را به دیروز تغییر دهید</li>
+                    <li>روی "➕ افزودن" کلیک کنید</li>
+                    <li>این کار را برای چندین محصول تکرار کنید</li>
+                    <li>در نهایت "ذخیره فاکتور" را بزنید</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🖥️ پیش‌نمایش سیستم</h3>
+            <iframe id="main-system" src="http://localhost:8003" style="display: none;"></iframe>
+            <button class="btn" onclick="toggleIframe()">📱 نمایش/مخفی کردن پیش‌نمایش</button>
+        </div>
+
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        // محصولات نمونه
+        const sampleProducts = [
+            {
+                id: Date.now() + 1,
+                name: "کفش کتانی زنانه ورزشی",
+                color: "سفید",
+                size: "37-40",
+                price: 2500000,
+                stock: 15,
+                category: "ورزشی"
+            },
+            {
+                id: Date.now() + 2,
+                name: "کفش مجلسی پاشنه بلند",
+                color: "سیاه",
+                size: "36-39",
+                price: 1800000,
+                stock: 8,
+                category: "مجلسی"
+            },
+            {
+                id: Date.now() + 3,
+                name: "کفش روزمره بندی",
+                color: "قهوه‌ای",
+                size: "35-42",
+                price: 1200000,
+                stock: 22,
+                category: "روزمره"
+            },
+            {
+                id: Date.now() + 4,
+                name: "کفش بوت زمستانی",
+                color: "مشکی",
+                size: "36-43",
+                price: 3200000,
+                stock: 12,
+                category: "زمستانی"
+            },
+            {
+                id: Date.now() + 5,
+                name: "صندل تابستانی",
+                color: "رنگارنگ",
+                size: "35-41",
+                price: 800000,
+                stock: 35,
+                category: "تابستانی"
+            }
+        ];
+
+        // تبدیل تاریخ میلادی به شمسی
+        function gregorianToJalali(gregorianYear, gregorianMonth, gregorianDay) {
+            const g_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            const j_days_in_month = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
+            
+            const g_y = gregorianYear;
+            const g_m = gregorianMonth;
+            const g_d = gregorianDay;
+            
+            const g_j_day_number = 365 * g_y + Math.floor((g_y - 1) / 4) - Math.floor((g_y - 1) / 100) + Math.floor((g_y - 1) / 400) + Math.floor((367 * g_m - 362) / 12) + (g_m > 2 ? (isLeap(g_y) ? -1 : -2) : 0) + g_d;
+            
+            const j_day_number = g_j_day_number - 79;
+            const j_np = Math.floor(j_day_number / 12053);
+            const j_day = j_day_number % 12053;
+            const j_y = 979 + 33 * j_np + 4 * Math.floor(j_day / 1461);
+            j_day %= 1461;
+            
+            if (j_day >= 366) {
+                j_y += Math.floor((j_day - 1) / 365);
+                j_day = (j_day - 1) % 365;
+            }
+            
+            let j_m = 1;
+            const j_days_in_year = isLeapJalali(j_y) ? 366 : 365;
+            while (j_day >= (j_days_in_year === 366 && j_m > 11 ? j_days_in_month[j_m - 1] : j_days_in_month[j_m - 1])) {
+                j_day -= j_days_in_month[j_m - 1];
+                j_m++;
+                if (j_m > 12) j_m = 1;
+            }
+            
+            return { year: j_y, month: j_m, day: j_day + 1 };
+        }
+        
+        function isLeap(year) {
+            return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+        }
+        
+        function isLeapJalali(year) {
+            return ((year - 474) % 2820 + 474) * 682 % 2816 < 682;
+        }
+        
+        function getTodayPersian() {
+            const today = new Date();
+            const persian = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            const year = persian.year;
+            const month = String(persian.month).padStart(2, '0');
+            const day = String(persian.day).padStart(2, '0');
+            return `${year}/${month}/${day}`;
+        }
+        
+        function getYesterdayPersian() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const persian = gregorianToJalali(yesterday.getFullYear(), yesterday.getMonth() + 1, yesterday.getDate());
+            const year = persian.year;
+            const month = String(persian.month).padStart(2, '0');
+            const day = String(persian.day).padStart(2, '0');
+            return `${year}/${month}/${day}`;
+        }
+
+        function step1_createProducts() {
+            try {
+                let existingProducts = [];
+                try {
+                    existingProducts = JSON.parse(localStorage.getItem('elishoes_products') || '[]');
+                } catch (e) {
+                    console.error('خطا در خواندن محصولات:', e);
+                }
+
+                const existingNames = existingProducts.map(p => p.name + ' ' + p.color);
+                const productsToAdd = sampleProducts.filter(p => 
+                    !existingNames.includes(p.name + ' ' + p.color)
+                );
+
+                if (productsToAdd.length > 0) {
+                    const allProducts = [...existingProducts, ...productsToAdd];
+                    localStorage.setItem('elishoes_products', JSON.stringify(allProducts));
+                    showMessage('✅ محصولات نمونه با موفقیت ایجاد شدند!', 'success');
+                    updateStepStatus(1, true);
+                } else {
+                    showMessage('⚠️ محصولات نمونه قبلاً وجود دارند', 'warning');
+                    updateStepStatus(1, true);
+                }
+                
+                displayProducts();
+            } catch (error) {
+                showMessage('❌ خطا در ایجاد محصولات: ' + error.message, 'error');
+            }
+        }
+
+        function step2_setPersianDate() {
+            try {
+                const todayPersian = getTodayPersian();
+                const yesterdayPersian = getYesterdayPersian();
+                
+                // ذخیره تاریخ‌های شمسی در localStorage برای استفاده در سیستم اصلی
+                localStorage.setItem('elishoes_today_persian', todayPersian);
+                localStorage.setItem('elishoes_yesterday_persian', yesterdayPersian);
+                
+                showMessage(`✅ تاریخ‌های شمسی تنظیم شد:<br>امروز: ${todayPersian}<br>دیروز: ${yesterdayPersian}`, 'success');
+                updateStepStatus(2, true);
+                
+            } catch (error) {
+                showMessage('❌ خطا در تنظیم تاریخ شمسی: ' + error.message, 'error');
+            }
+        }
+
+        function displayProducts() {
+            const productsList = document.getElementById('products-list');
+            const products = JSON.parse(localStorage.getItem('elishoes_products') || '[]');
+            
+            if (products.length === 0) {
+                productsList.innerHTML = '<p>هنوز محصولی ایجاد نشده</p>';
+            } else {
+                productsList.innerHTML = `
+                    <p><strong>📦 ${products.length} محصول ایجاد شده است:</strong></p>
+                    ${products.map(product => `
+                        <div class="product">
+                            <strong>${product.name}</strong> - ${product.color}
+                            <br><small>موجودی: ${product.stock} عدد | قیمت: ${product.price.toLocaleString('fa-IR')} تومان</small>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        function updateStepStatus(step, completed) {
+            const stepElement = document.getElementById(`step${step}`);
+            if (completed) {
+                stepElement.classList.add('completed');
+                stepElement.innerHTML = `✅ مرحله ${step}: تکمیل شده`;
+            } else {
+                stepElement.classList.remove('completed');
+                stepElement.classList.add('current');
+            }
+        }
+
+        function showMessage(msg, type) {
+            const messagesDiv = document.getElementById('messages');
+            const timestamp = new Date().toLocaleTimeString('fa-IR');
+            const colorClass = type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'error' ? 'error' : 'info';
+            
+            messagesDiv.innerHTML += `
+                <div class="info ${colorClass}" style="margin: 10px 0;">
+                    <strong>[${timestamp}]</strong> ${msg}
+                </div>
+            `;
+            
+            // اسکرول به پایین
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function openMainSystem() {
+            window.open('http://localhost:8003', '_blank');
+            showMessage('🚀 سیستم اصلی در تب جدید باز شد', 'info');
+            updateStepStatus(3, true);
+        }
+
+        function clearAllData() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید تمام داده‌ها را پاک کنید؟')) {
+                localStorage.removeItem('elishoes_products');
+                localStorage.removeItem('elishoes_today_persian');
+                localStorage.removeItem('elishoes_yesterday_persian');
+                localStorage.removeItem('elishoes_entry_invoices');
+                localStorage.removeItem('elishoes_sales151_invoices');
+                localStorage.removeItem('elishoes_sales168_invoices');
+                
+                displayProducts();
+                for (let i = 1; i <= 4; i++) {
+                    const stepElement = document.getElementById(`step${i}`);
+                    stepElement.classList.remove('completed', 'current');
+                    stepElement.innerHTML = `مرحله ${i}: ${i === 1 ? 'ایجاد محصولات نمونه' : i === 2 ? 'تنظیم تاریخ شمسی' : i === 3 ? 'تست dropdown محصولات' : 'ایجاد فاکتور نمونه'}`;
+                }
+                
+                showMessage('🗑️ تمام داده‌ها پاک شدند', 'warning');
+            }
+        }
+
+        function toggleIframe() {
+            const iframe = document.getElementById('main-system');
+            if (iframe.style.display === 'none') {
+                iframe.style.display = 'block';
+                showMessage('📱 پیش‌نمایش نمایش داده شد', 'info');
+            } else {
+                iframe.style.display = 'none';
+                showMessage('📱 پیش‌نمایش مخفی شد', 'info');
+            }
+        }
+
+        // نمایش محصولات موجود در بارگذاری صفحه
+        displayProducts();
+        
+        // نمایش پیام خوش‌آمدگویی
+        setTimeout(() => {
+            showMessage('🎉 خوش آمدید! مراحل تست را به ترتیب دنبال کنید.', 'info');
+        }, 500);
+    </script>
+</body>
+</html>

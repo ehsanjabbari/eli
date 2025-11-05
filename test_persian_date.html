@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>تست تاریخ شمسی</title>
+</head>
+<body>
+    <h1>تست تاریخ شمسی</h1>
+    <div id="result"></div>
+    
+    <script>
+        // کپی کد تاریخ شمسی
+        function gregorianToJalali(gregorianYear, gregorianMonth, gregorianDay) {
+            const g_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            const j_days_in_month = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
+            
+            const g_y = gregorianYear;
+            const g_m = gregorianMonth;
+            const g_d = gregorianDay;
+            
+            const g_j_day_number = 365 * g_y + Math.floor((g_y - 1) / 4) - Math.floor((g_y - 1) / 100) + Math.floor((g_y - 1) / 400) + Math.floor((367 * g_m - 362) / 12) + (g_m > 2 ? (isLeap(g_y) ? -1 : -2) : 0) + g_d;
+            
+            const j_day_number = g_j_day_number - 79;
+            const j_np = Math.floor(j_day_number / 12053);
+            const j_day = j_day_number % 12053;
+            const j_y = 979 + 33 * j_np + 4 * Math.floor(j_day / 1461);
+            j_day %= 1461;
+            
+            if (j_day >= 366) {
+                j_y += Math.floor((j_day - 1) / 365);
+                j_day = (j_day - 1) % 365;
+            }
+            
+            let j_m = 1;
+            const j_days_in_year = isLeapJalali(j_y) ? 366 : 365;
+            while (j_day >= (j_days_in_year === 366 && j_m > 11 ? j_days_in_month[j_m - 1] : j_days_in_month[j_m - 1])) {
+                j_day -= j_days_in_month[j_m - 1];
+                j_m++;
+                if (j_m > 12) j_m = 1;
+            }
+            
+            return { year: j_y, month: j_m, day: j_day + 1 };
+        }
+        
+        function isLeap(year) {
+            return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+        }
+        
+        function isLeapJalali(year) {
+            return ((year - 474) % 2820 + 474) * 682 % 2816 < 682;
+        }
+        
+        function convertGregorianToPersian(gregorianDate) {
+            const date = new Date(gregorianDate);
+            const persian = gregorianToJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
+            const year = persian.year;
+            const month = String(persian.month).padStart(2, '0');
+            const day = String(persian.day).padStart(2, '0');
+            return `${year}/${month}/${day}`;
+        }
+        
+        // تست
+        document.getElementById('result').innerHTML = `
+            امروز (2025-11-05): ${convertGregorianToPersian('2025-11-05')}<br>
+            دیروز (2025-11-04): ${convertGregorianToPersian('2025-11-04')}<br>
+            فردا (2025-11-06): ${convertGregorianToPersian('2025-11-06')}
+        `;
+    </script>
+</body>
+</html>

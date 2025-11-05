@@ -1,1 +1,4 @@
 127.0.0.1 - - [05/Nov/2025 05:49:40] "HEAD /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Nov/2025 05:59:59] "GET /test_products.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Nov/2025 06:01:13] "GET /complete_test.html HTTP/1.1" 200 -
+127.0.0.1 - - [05/Nov/2025 06:02:21] "HEAD / HTTP/1.1" 200 -
