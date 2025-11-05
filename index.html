@@ -1447,7 +1447,8 @@
             const name = document.getElementById('entry-product-name').value.trim();
             const color = document.getElementById('entry-product-color').value.trim();
             const quantity = parseInt(document.getElementById('entry-quantity').value);
-            const invoiceDate = document.getElementById('entry-invoice-date').value || new Date().toISOString().split('T')[0];
+            const rawDate = document.getElementById('entry-invoice-date').value;
+            const invoiceDate = rawDate ? inputDateToPersian(rawDate) : getTodayPersian();
 
             if (!name || !color || quantity <= 0) {
                 showToast('لطفاً تمام فیلدها را پر کنید', 'error');
@@ -1540,7 +1541,7 @@
                     <td>${item.name}</td>
                     <td>${item.color}</td>
                     <td>${item.quantity}</td>
-                    <td>${item.invoiceDate || new Date().toLocaleDateString('fa-IR')}</td>
+                    <td>${formatPersianDate(item.invoiceDate)}</td>
                     <td><button class="btn btn-danger" onclick="removeTempEntryItem(${index})">🗑️ حذف</button></td>
                 </tr>
             `).join('');
@@ -1618,8 +1619,8 @@
                         <div>
                             <strong>فاکتور ورودی #${invoice.id}</strong>
                             ${editingInvoice?.type === 'entry' && editingInvoice?.index === index ? 
-                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${invoice.date}" style="margin-right: 10px; padding: 5px;">` :
-                                `<span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>`
+                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${persianDateToInput(invoice.date)}" style="margin-right: 10px; padding: 5px;">` :
+                                `<span class="invoice-date">${formatPersianDate(invoice.date)}</span>`
                             }
                         </div>
                         <div class="invoice-actions">
@@ -1684,7 +1685,7 @@
             // بروزرسانی تاریخ
             const dateInput = document.getElementById(`edit-invoice-date-${type}-${index}`);
             if (dateInput) {
-                invoice.date = dateInput.value || invoice.date;
+                invoice.date = dateInput.value ? inputDateToPersian(dateInput.value) : invoice.date;
             }
 
             // اعتبارسنجی فروش بر اساس موجودی
@@ -2069,10 +2070,55 @@
             const day = String(persian.day).padStart(2, '0');
             return `${year}/${month}/${day}`;
         }
+        
+        // تابع کمکی برای نمایش تاریخ شمسی
+        function formatPersianDate(dateValue) {
+            if (!dateValue) return '';
+            
+            // اگر فرمت شمسی باشد (1404/08/13)، مستقیماً برگردان
+            if (typeof dateValue === 'string' && dateValue.includes('/')) {
+                return dateValue;
+            }
+            
+            // اگر فرمت میلادی باشد، به شمسی تبدیل کن
+            const date = new Date(dateValue);
+            return convertGregorianToPersian(date);
+        }
+        
+        // تابع کمکی برای تبدیل تاریخ شمسی به فرمت ورودی
+        function persianDateToInput(dateString) {
+            if (!dateString) return '';
+            
+            // اگر فرمت شمسی باشد (1404/08/13)، تبدیل به فرمت ورودی
+            if (dateString.includes('/')) {
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    return `${parts[0]}-${parts[1]}-${parts[2]}`;
+                }
+            }
+            
+            return dateString;
+        }
+        
+        // تابع کمکی برای تبدیل فرمت ورودی به تاریخ شمسی
+        function inputDateToPersian(dateValue) {
+            if (!dateValue) return '';
+            
+            // اگر فرمت تاریخ HTML باشد (1404-08-13)
+            if (dateValue.includes('-')) {
+                const parts = dateValue.split('-');
+                if (parts.length === 3) {
+                    return `${parts[0]}/${parts[1]}/${parts[2]}`;
+                }
+            }
+            
+            return dateValue;
+        }
 
         function setDefaultInvoiceDate() {
             const todayString = getTodayPersian();
-            document.getElementById('entry-invoice-date').value = todayString;
+            const inputFormat = persianDateToInput(todayString);
+            document.getElementById('entry-invoice-date').value = inputFormat;
         }
         
         // ========== مدیریت فروش ۱۵۱ ==========
@@ -2252,8 +2298,8 @@
                         <div>
                             <strong>فاکتور فروش ۱۵۱ #${invoice.id}</strong>
                             ${editingInvoice?.type === 'sales151' && editingInvoice?.index === index ? 
-                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${invoice.date}" style="margin-right: 10px; padding: 5px;">` :
-                                `<span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>`
+                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${persianDateToInput(invoice.date)}" style="margin-right: 10px; padding: 5px;">` :
+                                `<span class="invoice-date">${formatPersianDate(invoice.date)}</span>`
                             }
                         </div>
                         <div class="invoice-actions">
@@ -2420,8 +2466,8 @@
                         <div>
                             <strong>فاکتور فروش ۱۶۸ #${invoice.id}</strong>
                             ${editingInvoice?.type === 'sales168' && editingInvoice?.index === index ? 
-                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${invoice.date}" style="margin-right: 10px; padding: 5px;">` :
-                                `<span class="invoice-date">${new Date(invoice.date).toLocaleDateString('fa-IR')}</span>`
+                                `<input type="date" id="edit-invoice-date-${type}-${index}" value="${persianDateToInput(invoice.date)}" style="margin-right: 10px; padding: 5px;">` :
+                                `<span class="invoice-date">${formatPersianDate(invoice.date)}</span>`
                             }
                         </div>
                         <div class="invoice-actions">

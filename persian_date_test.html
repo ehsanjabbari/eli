@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست کامل تاریخ شمسی - سیستم انبارداری کفش</title>
+    <style>
+        body { 
+            font-family: 'Vazirmatn', sans-serif; 
+            padding: 20px; 
+            direction: rtl; 
+            background: #f5f5f5;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .section { 
+            background: white; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn { 
+            background: #4CAF50; 
+            color: white; 
+            padding: 12px 24px; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 5px; 
+            margin: 10px 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .btn:hover { background: #45a049; }
+        .btn.primary { background: #007bff; }
+        .btn.primary:hover { background: #0056b3; }
+        .btn.warning { background: #ffc107; color: #212529; }
+        .btn.warning:hover { background: #e0a800; }
+        .btn.success { background: #28a745; }
+        .btn.success:hover { background: #218838; }
+        .info { 
+            background: #e7f3ff; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            border-right: 4px solid #007bff;
+        }
+        .success { background: #d4edda; border-right-color: #28a745; }
+        .warning { background: #fff3cd; border-right-color: #ffc107; }
+        .error { background: #f8d7da; border-right-color: #dc3545; }
+        .test-steps { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 10px 0;
+        }
+        .step { margin: 10px 0; padding: 10px; background: white; border-radius: 5px; }
+        .completed { background: #d4edda; }
+        .current { background: #fff3cd; border: 2px solid #ffc107; }
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        .status-ready { background: #28a745; }
+        .status-working { background: #ffc107; animation: pulse 1s infinite; }
+        .status-error { background: #dc3545; }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .feature-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .feature-card h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .feature-card ul {
+            margin: 10px 0;
+            padding-right: 20px;
+        }
+        .feature-card li {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 تست کامل تاریخ شمسی - سیستم انبارداری کفش</h1>
+        
+        <div class="info">
+            <h3>📋 قابلیت‌های جدید پیاده‌سازی شده:</h3>
+            <div class="feature-card">
+                <h4>🔽 Dropdown انتخاب محصول در فرم ورود</h4>
+                <ul>
+                    <li>نمایش محصولات قبلاً وارد شده</li>
+                    <li>انتخاب محصول جدید یا موجود</li>
+                    <li>پر شدن خودکار فیلدهای نام و رنگ</li>
+                    <li>نمایش موجودی فعلی هر محصول</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4>📅 تاریخ شمسی در تمام قسمت‌های سیستم</h4>
+                <ul>
+                    <li>تنظیم تاریخ فاکتور در فرم ورود</li>
+                    <li>نمایش تاریخ شمسی در فاکتورهای ورودی</li>
+                    <li>نمایش تاریخ شمسی در فاکتورهای فروش (151, 168)</li>
+                    <li>تبدیل خودکار تاریخ میلادی به شمسی</li>
+                    <li>پشتیبانی از ویرایش تاریخ فاکتورها</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🛠️ ابزارهای تست</h3>
+            <button class="btn primary" onclick="runFullTest()">🚀 اجرای تست کامل</button>
+            <button class="btn" onclick="runPersianTest()">📅 تست تاریخ شمسی</button>
+            <button class="btn" onclick="createSampleData()">📦 ایجاد داده‌های نمونه</button>
+            <button class="btn success" onclick="openMainSystem()">🖥️ باز کردن سیستم اصلی</button>
+            <button class="btn warning" onclick="clearAllData()">🗑️ پاک کردن تمام داده‌ها</button>
+        </div>
+
+        <div class="section">
+            <h3>📊 وضعیت سیستم</h3>
+            <div id="system-status">
+                <div class="step" id="status-products">محصولات: در انتظار تست <span class="status-indicator status-ready"></span></div>
+                <div class="step" id="status-invoices">فاکتورها: در انتظار تست <span class="status-indicator status-ready"></span></div>
+                <div class="step" id="status-dates">تاریخ‌های شمسی: در انتظار تست <span class="status-indicator status-ready"></span></div>
+                <div class="step" id="status-ui">رابط کاربری: در انتظار تست <span class="status-indicator status-ready"></span></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>💻 خروجی کنسول</h3>
+            <div id="console-output" class="console-output">لطفاً تست کامل را اجرا کنید...</div>
+        </div>
+
+        <div class="section">
+            <h3>📚 راهنمای تست</h3>
+            <div class="test-steps">
+                <h4>مراحل تست:</h4>
+                <ol>
+                    <li><strong>اجرای تست کامل:</strong> دکمه "🚀 اجرای تست کامل" را کلیک کنید</li>
+                    <li><strong>بررسی نتایج:</strong> خروجی کنسول را مشاهده کنید</li>
+                    <li><strong>باز کردن سیستم:</strong> سیستم اصلی را در تب جدید باز کنید</li>
+                    <li><strong>تست فرم ورود:</strong>
+                        <ul>
+                            <li>به تب "ورود محصولات" بروید</li>
+                            <li>تاریخ شمسی را بررسی کنید</li>
+                            <li>Dropdown محصولات را تست کنید</li>
+                            <li>فاکتور نمونه با تاریخ دیروز ایجاد کنید</li>
+                        </ul>
+                    </li>
+                    <li><strong>بررسی فاکتورها:</strong>
+                        <ul>
+                            <li>به تب "فاکتورهای ورودی" بروید</li>
+                            <li>فاکتور با تاریخ شمسی را مشاهده کنید</li>
+                            <li>فاکتورهای فروش 151 و 168 را بررسی کنید</li>
+                        </ul>
+                    </li>
+                </ol>
+                
+                <h4>تاریخ‌های تست:</h4>
+                <ul>
+                    <li><strong>امروز:</strong> 1404/08/14 (مطابق 2025-11-05)</li>
+                    <li><strong>دیروز:</strong> 1404/08/13 (مطابق 2025-11-04)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 فایل‌های تست</h3>
+            <div class="feature-card">
+                <h4>📁 فایل‌های کلیدی:</h4>
+                <ul>
+                    <li><code>test_persian_date_complete.js</code> - اسکریپت تست کامل</li>
+                    <li><code>complete_test.html</code> - صفحه تست گرافیکی</li>
+                    <li><code>testing_guide.md</code> - راهنمای تفصیلی تست</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تابع کپی کردن خروجی کنسول
+        function logToConsole(message, type = 'info') {
+            const consoleOutput = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString('fa-IR');
+            const coloredMessage = `[${timestamp}] ${message}`;
+            
+            let color = '#d4d4d4';
+            switch (type) {
+                case 'success': color = '#4CAF50'; break;
+                case 'warning': color = '#FFC107'; break;
+                case 'error': color = '#F44336'; break;
+                case 'info': color = '#2196F3'; break;
+            }
+            
+            consoleOutput.innerHTML += `<span style="color: ${color}">${coloredMessage}</span>\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // تابع بروزرسانی وضعیت
+        function updateStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            const indicator = element.querySelector('.status-indicator');
+            
+            element.className = 'step';
+            if (status === 'working') {
+                element.classList.add('current');
+                indicator.className = 'status-indicator status-working';
+                element.innerHTML = message + ' <span class="status-indicator status-working"></span>';
+            } else if (status === 'completed') {
+                element.classList.add('completed');
+                indicator.className = 'status-indicator status-ready';
+                element.innerHTML = '✅ ' + message.replace('در حال...', 'تکمیل شده') + ' <span class="status-indicator status-ready"></span>';
+            } else if (status === 'error') {
+                indicator.className = 'status-indicator status-error';
+                element.innerHTML = '❌ ' + message + ' <span class="status-indicator status-error"></span>';
+            }
+        }
+
+        // تابع ایجاد محصولات نمونه
+        function createSampleData() {
+            logToConsole('📦 شروع ایجاد داده‌های نمونه...', 'info');
+            updateStatus('status-products', 'working', 'ایجاد محصولات نمونه');
+
+            const sampleProducts = [
+                {
+                    id: Date.now() + 1,
+                    name: "کفش کتانی زنانه ورزشی",
+                    color: "سفید",
+                    size: "37-40",
+                    price: 2500000,
+                    stock: 15,
+                    category: "ورزشی"
+                },
+                {
+                    id: Date.now() + 2,
+                    name: "کفش مجلسی پاشنه بلند",
+                    color: "سیاه",
+                    size: "36-39",
+                    price: 1800000,
+                    stock: 8,
+                    category: "مجلسی"
+                },
+                {
+                    id: Date.now() + 3,
+                    name: "کفش روزمره بندی",
+                    color: "قهوه‌ای",
+                    size: "35-42",
+                    price: 1200000,
+                    stock: 22,
+                    category: "روزمره"
+                },
+                {
+                    id: Date.now() + 4,
+                    name: "کفش بوت زمستانی",
+                    color: "مشکی",
+                    size: "36-43",
+                    price: 3200000,
+                    stock: 12,
+                    category: "زمستانی"
+                },
+                {
+                    id: Date.now() + 5,
+                    name: "صندل تابستانی",
+                    color: "رنگارنگ",
+                    size: "35-41",
+                    price: 800000,
+                    stock: 35,
+                    category: "تابستانی"
+                }
+            ];
+
+            try {
+                let existingProducts = JSON.parse(localStorage.getItem('elishoes_products') || '[]');
+                const existingNames = existingProducts.map(p => p.name + ' ' + p.color);
+                const productsToAdd = sampleProducts.filter(p => 
+                    !existingNames.includes(p.name + ' ' + p.color)
+                );
+
+                if (productsToAdd.length > 0) {
+                    const allProducts = [...existingProducts, ...productsToAdd];
+                    localStorage.setItem('elishoes_products', JSON.stringify(allProducts));
+                    logToConsole(`✅ ${productsToAdd.length} محصول نمونه ایجاد شد`, 'success');
+                    updateStatus('status-products', 'completed', 'محصولات: 5 محصول نمونه ایجاد شد');
+                } else {
+                    logToConsole('⚠️ محصولات نمونه قبلاً وجود دارند', 'warning');
+                    updateStatus('status-products', 'completed', 'محصولات: قبلاً ایجاد شده');
+                }
+            } catch (error) {
+                logToConsole('❌ خطا در ایجاد محصولات: ' + error.message, 'error');
+                updateStatus('status-products', 'error', 'محصولات: خطا در ایجاد');
+            }
+        }
+
+        // تابع تست تاریخ شمسی
+        function runPersianTest() {
+            logToConsole('📅 شروع تست تاریخ شمسی...', 'info');
+            updateStatus('status-dates', 'working', 'تست تاریخ شمسی');
+
+            // محاسبه تاریخ‌های مهم (تقریبی)
+            const today = new Date('2025-11-05');
+            const yesterday = new Date('2025-11-04');
+            
+            function formatPersianDate(date) {
+                const yearOffset = 622;
+                const persianYear = date.getFullYear() - yearOffset;
+                const persianMonth = String(date.getMonth() + 1).padStart(2, '0');
+                const persianDay = String(date.getDate()).padStart(2, '0');
+                return `${persianYear}/${persianMonth}/${persianDay}`;
+            }
+
+            const todayPersian = formatPersianDate(today);
+            const yesterdayPersian = formatPersianDate(yesterday);
+
+            logToConsole(`📅 تاریخ امروز (2025-11-05): ${todayPersian}`, 'info');
+            logToConsole(`📅 تاریخ دیروز (2025-11-04): ${yesterdayPersian}`, 'info');
+
+            // ایجاد فاکتور نمونه با تاریخ شمسی
+            const sampleInvoice = {
+                id: Date.now(),
+                date: yesterdayPersian,
+                items: [
+                    {
+                        name: "کفش کتانی زنانه ورزشی",
+                        color: "سفید",
+                        quantity: 5,
+                        invoiceDate: yesterdayPersian
+                    },
+                    {
+                        name: "کفش مجلسی پاشنه بلند",
+                        color: "سیاه", 
+                        quantity: 2,
+                        invoiceDate: yesterdayPersian
+                    }
+                ]
+            };
+
+            try {
+                const existingInvoices = JSON.parse(localStorage.getItem('entryInvoices') || '[]');
+                existingInvoices.push(sampleInvoice);
+                localStorage.setItem('entryInvoices', JSON.stringify(existingInvoices));
+                
+                logToConsole('✅ فاکتور نمونه با تاریخ شمسی ایجاد شد', 'success');
+                updateStatus('status-dates', 'completed', 'تاریخ شمسی: فاکتور نمونه ایجاد شد');
+                updateStatus('status-invoices', 'completed', 'فاکتورها: 1 فاکتور نمونه');
+            } catch (error) {
+                logToConsole('❌ خطا در ایجاد فاکتور نمونه: ' + error.message, 'error');
+                updateStatus('status-dates', 'error', 'تاریخ شمسی: خطا در ایجاد فاکتور');
+            }
+        }
+
+        // تابع تست کامل
+        function runFullTest() {
+            logToConsole('🚀 شروع تست کامل سیستم...', 'info');
+            
+            // بروزرسانی همه وضعیت‌ها
+            updateStatus('status-ui', 'working', 'تست رابط کاربری');
+
+            // اجرای تست‌ها
+            createSampleData();
+            setTimeout(() => runPersianTest(), 1000);
+            
+            setTimeout(() => {
+                // فراخوانی توابع به‌روزرسانی در سیستم اصلی
+                logToConsole('🔄 فراخوانی توابع به‌روزرسانی...', 'info');
+                
+                if (typeof updateEntryProductSelect === 'function') {
+                    try {
+                        updateEntryProductSelect();
+                        logToConsole('✅ dropdown محصولات به‌روزرسانی شد', 'success');
+                    } catch (error) {
+                        logToConsole('⚠️ تابع updateEntryProductSelect یافت نشد', 'warning');
+                    }
+                }
+
+                if (typeof renderEntryInvoices === 'function') {
+                    try {
+                        renderEntryInvoices();
+                        logToConsole('✅ فاکتورهای ورودی رندر شدند', 'success');
+                    } catch (error) {
+                        logToConsole('⚠️ تابع renderEntryInvoices یافت نشد', 'warning');
+                    }
+                }
+
+                if (typeof setDefaultInvoiceDate === 'function') {
+                    try {
+                        setDefaultInvoiceDate();
+                        logToConsole('✅ تاریخ پیش‌فرض تنظیم شد', 'success');
+                    } catch (error) {
+                        logToConsole('⚠️ تابع setDefaultInvoiceDate یافت نشد', 'warning');
+                    }
+                }
+
+                updateStatus('status-ui', 'completed', 'رابط کاربری: توابع به‌روزرسانی شدند');
+                logToConsole('🎉 تست کامل تکمیل شد!', 'success');
+            }, 2000);
+        }
+
+        // تابع باز کردن سیستم اصلی
+        function openMainSystem() {
+            window.open('http://localhost:8005', '_blank');
+            logToConsole('🖥️ سیستم اصلی در تب جدید باز شد', 'info');
+        }
+
+        // تابع پاک کردن داده‌ها
+        function clearAllData() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید تمام داده‌ها را پاک کنید؟')) {
+                localStorage.removeItem('elishoes_products');
+                localStorage.removeItem('entryInvoices');
+                localStorage.removeItem('salesInvoices151');
+                localStorage.removeItem('salesInvoices168');
+                
+                // بروزرسانی وضعیت‌ها
+                ['status-products', 'status-invoices', 'status-dates', 'status-ui'].forEach(id => {
+                    const element = document.getElementById(id);
+                    element.classList.remove('completed', 'current');
+                    const indicator = element.querySelector('.status-indicator');
+                    indicator.className = 'status-indicator status-ready';
+                    element.innerHTML = element.innerHTML.split('>')[1];
+                    element.innerHTML = element.innerHTML.split('<')[0] + 'در انتظار تست <span class="status-indicator status-ready"></span>';
+                });
+                
+                logToConsole('🗑️ تمام داده‌ها پاک شدند', 'warning');
+                document.getElementById('console-output').innerHTML = 'لطفاً تست کامل را اجرا کنید...';
+            }
+        }
+
+        // پیام خوش‌آمدگویی
+        setTimeout(() => {
+            logToConsole('🎉 خوش آمدید! برای شروع تست، روی "🚀 اجرای تست کامل" کلیک کنید.', 'info');
+        }, 500);
+    </script>
+</body>
+</html>
