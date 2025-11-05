@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Entry Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; }
+        button { 
+            background: #28a745; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background: #218838; }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .result { margin-top: 20px; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Entry System Test</h1>
+        
+        <div class="form-group">
+            <label for="product-select">محصول:</label>
+            <select id="product-select">
+                <option value="Nike Air Max">Nike Air Max</option>
+                <option value="Adidas Ultra Boost">Adidas Ultra Boost</option>
+                <option value="New Balance 990">New Balance 990</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="product-name">نام محصول:</label>
+            <input type="text" id="product-name" placeholder="نام محصول">
+        </div>
+        
+        <div class="form-group">
+            <label for="product-color">رنگ:</label>
+            <input type="text" id="product-color" placeholder="رنگ">
+        </div>
+        
+        <div class="form-group">
+            <label for="quantity">تعداد:</label>
+            <input type="number" id="quantity" placeholder="تعداد" value="1">
+        </div>
+        
+        <button onclick="addItem()">➕ افزودن</button>
+        <button onclick="saveItem()">💾 ذخیره فاکتور</button>
+        <button onclick="showResults()">📊 نمایش نتایج</button>
+        <button onclick="clearForm()">❌ پاک کردن فرم</button>
+        
+        <div id="temp-list" class="hidden">
+            <h3>آیتم‌های موقت:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>نام</th>
+                        <th>رنگ</th>
+                        <th>تعداد</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="temp-tbody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="results" class="hidden">
+            <h3>فاکتورهای ذخیره شده:</h3>
+            <div id="invoice-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // متغیرهای عمومی
+        let tempItems = [];
+        let invoices = JSON.parse(localStorage.getItem('simple_invoices')) || [];
+        
+        // توابع اصلی
+        function addItem() {
+            console.log('Add Item function called!');
+            
+            const productSelect = document.getElementById('product-select').value;
+            const productName = document.getElementById('product-name').value.trim();
+            const color = document.getElementById('product-color').value.trim();
+            const quantity = parseInt(document.getElementById('quantity').value);
+            
+            // اگر نام محصول خالی است، از select استفاده کن
+            const name = productName || productSelect;
+            
+            if (!name || !color || !quantity || quantity <= 0) {
+                alert('لطفاً تمام فیلدها را پر کنید!');
+                return;
+            }
+            
+            const item = {
+                name: name,
+                color: color,
+                quantity: quantity
+            };
+            
+            tempItems.push(item);
+            
+            // نمایش آیتم‌های موقت
+            document.getElementById('temp-list').classList.remove('hidden');
+            renderTempItems();
+            
+            // پاک کردن فرم
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-color').value = '';
+            document.getElementById('quantity').value = '1';
+            
+            alert('محصول به لیست موقت اضافه شد!');
+        }
+        
+        function renderTempItems() {
+            const tbody = document.getElementById('temp-tbody');
+            tbody.innerHTML = tempItems.map((item, index) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td><button onclick="removeItem(${index})">🗑️ حذف</button></td>
+                </tr>
+            `).join('');
+        }
+        
+        function removeItem(index) {
+            tempItems.splice(index, 1);
+            if (tempItems.length === 0) {
+                document.getElementById('temp-list').classList.add('hidden');
+            } else {
+                renderTempItems();
+            }
+        }
+        
+        function saveItem() {
+            if (tempItems.length === 0) {
+                alert('هیچ آیتمی برای ذخیره وجود ندارد!');
+                return;
+            }
+            
+            const invoice = {
+                id: Date.now(),
+                items: [...tempItems],
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            invoices.push(invoice);
+            localStorage.setItem('simple_invoices', JSON.stringify(invoices));
+            
+            // پاک کردن آیتم‌های موقت
+            tempItems = [];
+            document.getElementById('temp-list').classList.add('hidden');
+            
+            alert('فاکتور با موفقیت ذخیره شد!');
+        }
+        
+        function showResults() {
+            const resultDiv = document.getElementById('results');
+            const listDiv = document.getElementById('invoice-list');
+            
+            listDiv.innerHTML = invoices.map(invoice => `
+                <div style="border: 1px solid #ddd; margin: 10px 0; padding: 10px;">
+                    <h4>فاکتور ${invoice.id}</h4>
+                    <p>تاریخ: ${invoice.date}</p>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <tr>
+                            <th>نام</th>
+                            <th>رنگ</th>
+                            <th>تعداد</th>
+                        </tr>
+                        ${invoice.items.map(item => `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td>${item.color}</td>
+                                <td>${item.quantity}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </div>
+            `).join('');
+            
+            resultDiv.classList.remove('hidden');
+        }
+        
+        function clearForm() {
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-color').value = '';
+            document.getElementById('quantity').value = '1';
+            document.getElementById('product-select').selectedIndex = 0;
+        }
+        
+        // تست وقتی صفحه لود می‌شود
+        console.log('Simple test page loaded successfully!');
+        document.body.style.backgroundColor = '#f9f9f9';
+    </script>
+</body>
+</html>

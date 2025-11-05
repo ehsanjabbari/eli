@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Console Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test-btn { 
+            background: #28a745; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .test-btn:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <h2>Test Console and JavaScript</h2>
+    <button class="test-btn" onclick="testAlert()">Test Alert</button>
+    <button class="test-btn" onclick="testConsole()">Test Console</button>
+    <button class="test-btn" onclick="openMain()">Open Main System</button>
+    
+    <div id="output"></div>
+
+    <script>
+        function testAlert() {
+            alert('Alert works!');
+            document.getElementById('output').innerHTML += '<p>✅ Alert test passed</p>';
+        }
+        
+        function testConsole() {
+            console.log('Console log works!');
+            console.error('Console error works!');
+            document.getElementById('output').innerHTML += '<p>✅ Console test passed</p>';
+        }
+        
+        function openMain() {
+            window.location.href = 'index.html';
+        }
+        
+        // Test if script loads properly
+        console.log('Test script loaded successfully!');
+        document.getElementById('output').innerHTML += '<p>✅ Script loaded successfully!</p>';
+    </script>
+</body>
+</html>

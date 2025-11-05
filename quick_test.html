@@ -30,4 +30,30 @@
 
     <script src="quick_test.js"></script>
 </body>
+</html><!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Test</title>
+</head>
+<body>
+    <h1>Quick JavaScript Test</h1>
+    <button onclick="alert('JavaScript Works!')">Test Button</button>
+    
+    <div id="result"></div>
+
+    <script>
+        console.log('Script is running!');
+        document.getElementById('result').innerHTML = 'Script loaded successfully!';
+        
+        function testFunction() {
+            console.log('Test function called!');
+            return 'Function works!';
+        }
+        
+        // Test if function works
+        setTimeout(function() {
+            document.getElementById('result').innerHTML += '<br>Function test: ' + testFunction();
+        }, 1000);
+    </script>
+</body>
 </html>

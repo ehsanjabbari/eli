@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Entry System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 12px 24px; background: #e9ecef; border: none; border-radius: 5px; cursor: pointer; }
+        .tab.active { background: #007bff; color: white; }
+        .tab-content { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: none; }
+        .tab-content.active { display: block; }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #545b62; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        .hidden { display: none; }
+        .message { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 سیستم مدیریت کفش - ساده</h1>
+            <p>نسخه تست برای بررسی عملکرد صحیح</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('entry')">📦 ورودی</button>
+            <button class="tab" onclick="showTab('invoices')">📋 فاکتورها</button>
+            <button class="tab" onclick="showTab('inventory')">📊 موجودی</button>
+        </div>
+
+        <div id="entry" class="tab-content active">
+            <h2>ثبت ورودی محصول</h2>
+            
+            <div class="form-group">
+                <label for="product-name">نام محصول:</label>
+                <input type="text" id="product-name" placeholder="مثلاً Nike Air Max">
+            </div>
+            
+            <div class="form-group">
+                <label for="product-color">رنگ:</label>
+                <input type="text" id="product-color" placeholder="مثلاً مشکی">
+            </div>
+            
+            <div class="form-group">
+                <label for="quantity">تعداد:</label>
+                <input type="number" id="quantity" value="1" min="1">
+            </div>
+            
+            <button class="btn btn-success" onclick="addEntry()">➕ افزودن به لیست موقت</button>
+            <button class="btn btn-secondary" onclick="saveInvoice()">💾 ذخیره فاکتور</button>
+            <button class="btn btn-secondary" onclick="clearForm()">❌ پاک کردن فرم</button>
+
+            <div id="temp-list" class="hidden">
+                <h3>آیتم‌های موقت:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>نام محصول</th>
+                            <th>رنگ</th>
+                            <th>تعداد</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="temp-items"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="invoices" class="tab-content">
+            <h2>فاکتورهای ورودی</h2>
+            <div id="invoices-list">
+                <p>هنوز فاکتوری ثبت نشده است</p>
+            </div>
+        </div>
+
+        <div id="inventory" class="tab-content">
+            <h2>موجودی محصولات</h2>
+            <div id="inventory-list">
+                <p>هنوز محصولی ثبت نشده است</p>
+            </div>
+        </div>
+
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        // متغیرهای عمومی
+        let products = [];
+        let invoices = [];
+        let tempItems = [];
+
+        // تابع نمایش پیام
+        function showMessage(text, type = 'success') {
+            const messageDiv = document.getElementById('messages');
+            messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        // تابع تغییر تب
+        function showTab(tabName) {
+            // پنهان کردن همه تب‌ها
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // نمایش تب انتخاب شده
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            // به‌روزرسانی محتوا
+            if (tabName === 'invoices') {
+                renderInvoices();
+            } else if (tabName === 'inventory') {
+                renderInventory();
+            }
+        }
+
+        // تابع افزودن به لیست موقت
+        function addEntry() {
+            console.log('addEntry function called');
+            
+            const name = document.getElementById('product-name').value.trim();
+            const color = document.getElementById('product-color').value.trim();
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            if (!name || !color || !quantity || quantity <= 0) {
+                showMessage('لطفاً تمام فیلدها را پر کنید!', 'error');
+                return;
+            }
+
+            // افزودن به لیست موقت
+            const item = {
+                name: name,
+                color: color,
+                quantity: quantity
+            };
+
+            tempItems.push(item);
+            
+            // نمایش لیست موقت
+            document.getElementById('temp-list').classList.remove('hidden');
+            renderTempItems();
+            
+            // پاک کردن فرم
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-color').value = '';
+            document.getElementById('quantity').value = '1';
+
+            showMessage('محصول به لیست موقت اضافه شد!');
+        }
+
+        // تابع نمایش آیتم‌های موقت
+        function renderTempItems() {
+            const tbody = document.getElementById('temp-items');
+            tbody.innerHTML = tempItems.map((item, index) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td><button onclick="removeTempItem(${index})">🗑️ حذف</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // تابع حذف آیتم موقت
+        function removeTempItem(index) {
+            tempItems.splice(index, 1);
+            if (tempItems.length === 0) {
+                document.getElementById('temp-list').classList.add('hidden');
+            } else {
+                renderTempItems();
+            }
+        }
+
+        // تابع ذخیره فاکتور
+        function saveInvoice() {
+            if (tempItems.length === 0) {
+                showMessage('هیچ آیتمی برای ذخیره وجود ندارد!', 'error');
+                return;
+            }
+
+            const invoice = {
+                id: Date.now(),
+                items: [...tempItems],
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            invoices.push(invoice);
+            
+            // به‌روزرسانی محصولات
+            tempItems.forEach(item => {
+                let product = products.find(p => p.name === item.name && p.color === item.color);
+                if (!product) {
+                    product = {
+                        name: item.name,
+                        color: item.color,
+                        total: 0
+                    };
+                    products.push(product);
+                }
+                product.total += item.quantity;
+            });
+
+            // پاک کردن لیست موقت
+            tempItems = [];
+            document.getElementById('temp-list').classList.add('hidden');
+
+            showMessage('فاکتور با موفقیت ذخیره شد!');
+            renderInvoices();
+            renderInventory();
+        }
+
+        // تابع نمایش فاکتورها
+        function renderInvoices() {
+            const container = document.getElementById('invoices-list');
+            if (invoices.length === 0) {
+                container.innerHTML = '<p>هنوز فاکتوری ثبت نشده است</p>';
+                return;
+            }
+
+            container.innerHTML = invoices.map(invoice => `
+                <div style="border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px;">
+                    <h4>فاکتور #${invoice.id}</h4>
+                    <p>تاریخ: ${invoice.date}</p>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <tr>
+                            <th>نام محصول</th>
+                            <th>رنگ</th>
+                            <th>تعداد</th>
+                        </tr>
+                        ${invoice.items.map(item => `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td>${item.color}</td>
+                                <td>${item.quantity}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </div>
+            `).join('');
+        }
+
+        // تابع نمایش موجودی
+        function renderInventory() {
+            const container = document.getElementById('inventory-list');
+            if (products.length === 0) {
+                container.innerHTML = '<p>هنوز محصولی ثبت نشده است</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table>
+                    <tr>
+                        <th>نام محصول</th>
+                        <th>رنگ</th>
+                        <th>موجودی کل</th>
+                    </tr>
+                    ${products.map(product => `
+                        <tr>
+                            <td>${product.name}</td>
+                            <td>${product.color}</td>
+                            <td>${product.total}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            `;
+        }
+
+        // تابع پاک کردن فرم
+        function clearForm() {
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-color').value = '';
+            document.getElementById('quantity').value = '1';
+        }
+
+        // تست وقتی صفحه لود می‌شود
+        console.log('Simple Entry System loaded successfully!');
+        document.getElementById('messages').innerHTML = '<div class="message success">✅ سیستم ساده آماده است</div>';
+    </script>
+</body>
+</html>

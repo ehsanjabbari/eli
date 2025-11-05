@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Check</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .result { padding: 10px; margin: 10px 0; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; }
+        button { margin: 5px; padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <h1>System Functionality Check</h1>
+    
+    <div id="test-results"></div>
+    
+    <button onclick="testMainSystem()">Test Main System</button>
+    <button onclick="testTabSwitching()">Test Tab Switching</button>
+    <button onclick="testEntryFunction()">Test Entry Function</button>
+
+    <script>
+        function log(message, type = 'info') {
+            const div = document.getElementById('test-results');
+            div.innerHTML += `<div class="result ${type}">${message}</div>`;
+        }
+
+        function testMainSystem() {
+            log('🔍 Testing main system access...', 'info');
+            
+            const iframe = document.createElement('iframe');
+            iframe.src = 'index.html';
+            iframe.style.width = '100%';
+            iframe.style.height = '400px';
+            document.body.appendChild(iframe);
+            
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    log('✅ Main system loaded successfully', 'success');
+                    
+                    // Check if functions exist
+                    if (iframe.contentWindow.addEntry) {
+                        log('✅ addEntry function exists', 'success');
+                    } else {
+                        log('❌ addEntry function NOT found', 'error');
+                    }
+                    
+                    if (iframe.contentWindow.showTab) {
+                        log('✅ showTab function exists', 'success');
+                    } else {
+                        log('❌ showTab function NOT found', 'error');
+                    }
+                    
+                } catch (e) {
+                    log('❌ Error accessing iframe: ' + e.message, 'error');
+                }
+            };
+            
+            iframe.onerror = function() {
+                log('❌ Failed to load main system', 'error');
+            };
+        }
+
+        function testTabSwitching() {
+            log('🔍 Testing tab switching...', 'info');
+            
+            // This test would need to be done manually in the browser
+            log('📝 Please manually test tab switching in the main system', 'info');
+        }
+
+        function testEntryFunction() {
+            log('🔍 Testing entry function...', 'info');
+            
+            // This test would need to be done manually in the browser
+            log('📝 Please manually test entry function in the main system', 'info');
+        }
+
+        // Initialize
+        log('✅ System check page loaded successfully', 'success');
+        log('📋 Ready to test main system functionality', 'info');
+    </script>
+</body>
+</html>
