@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست دکمه افزودن</title>
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@latest/dist/persian-date.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 8px; text-align: right; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; z-index: 1000; }
+        .error { background: #dc3545 !important; }
+        .log { background: #e9ecef; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تست دکمه افزودن</h1>
+        
+        <div class="log" id="debug-log">آماده...</div>
+        
+        <div class="form-group">
+            <label>نام محصول</label>
+            <input type="text" id="test-name" value="کفش تست">
+        </div>
+        
+        <div class="form-group">
+            <label>رنگ</label>
+            <input type="text" id="test-color" value="مشکی">
+        </div>
+        
+        <div class="form-group">
+            <label>تعداد</label>
+            <input type="number" id="test-quantity" value="1" min="1">
+        </div>
+        
+        <button class="btn btn-success" onclick="testAdd()">🧪 تست افزودن</button>
+        <button class="btn btn-danger" onclick="checkFunctions()">🔍 بررسی توابع</button>
+        
+        <div id="temp-list" class="hidden" style="margin-top: 20px;">
+            <h3>لیست موقت:</h3>
+            <table>
+                <thead>
+                    <tr><th>نام</th><th>رنگ</th><th>تعداد</th><th>عملیات</th></tr>
+                </thead>
+                <tbody id="temp-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+        let tempEntryItems = [];
+        
+        function log(message) {
+            console.log(message);
+            document.getElementById('debug-log').innerHTML += '<br>' + message;
+        }
+        
+        function showToast(message, type = 'success') {
+            log('Toast: ' + message);
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            if (type === 'error') toast.classList.add('error');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        function formatPersianDate(dateString) {
+            if (!dateString) return new Date().toLocaleDateString('fa-IR');
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('fa-IR');
+            } catch (e) {
+                log('خطا در formatPersianDate: ' + e.message);
+                return dateString;
+            }
+        }
+        
+        function updateEntryProductSelect() {
+            log('تابع updateEntryProductSelect اجرا شد');
+        }
+        
+        function clearEntryForm() {
+            document.getElementById('test-name').value = '';
+            document.getElementById('test-color').value = '';
+            document.getElementById('test-quantity').value = '1';
+            log('تابع clearEntryForm اجرا شد');
+        }
+        
+        function renderTempEntryItems() {
+            log('تابع renderTempEntryItems اجرا شد');
+            const tbody = document.getElementById('temp-body');
+            if (!tbody) {
+                log('ERROR: tbody not found!');
+                return;
+            }
+            
+            tbody.innerHTML = tempEntryItems.map((item, index) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td><button onclick="removeItem(${index})">حذف</button></td>
+                </tr>
+            `).join('');
+        }
+        
+        function removeItem(index) {
+            log('حذف آیتم: ' + index);
+            tempEntryItems.splice(index, 1);
+            renderTempEntryItems();
+            
+            if (tempEntryItems.length === 0) {
+                document.getElementById('temp-list').classList.add('hidden');
+            }
+        }
+        
+        function testAdd() {
+            log('=== شروع تابع testAdd ===');
+            
+            const name = document.getElementById('test-name').value.trim();
+            const color = document.getElementById('test-color').value.trim();
+            const quantity = parseInt(document.getElementById('test-quantity').value);
+            
+            log('مقادیر: name=' + name + ', color=' + color + ', quantity=' + quantity);
+            
+            if (!name || !color || quantity <= 0) {
+                showToast('لطفاً تمام فیلدها را پر کنید', 'error');
+                log('ERROR: فیلدها خالی است');
+                return;
+            }
+            
+            log('فیلدها صحیح است');
+            
+            // جستجوی محصول موجود
+            let product = products.find(p => p.name === name && p.color === color);
+            log('محصول یافت شد: ' + (product ? 'بله' : 'خیر'));
+            
+            if (!product) {
+                product = {
+                    id: Date.now(),
+                    name: name,
+                    color: color,
+                    entry: 0,
+                    sales151: 0,
+                    sales168: 0
+                };
+                products.push(product);
+                log('محصول جدید اضافه شد');
+            }
+            
+            // افزودن به لیست موقت
+            tempEntryItems.push({
+                productId: product.id,
+                name: name,
+                color: color,
+                quantity: quantity,
+                invoiceDate: new Date().toISOString().split('T')[0]
+            });
+            
+            log('آیتم به لیست موقت اضافه شد. تعداد کل: ' + tempEntryItems.length);
+            
+            // پاک کردن فرم
+            clearEntryForm();
+            updateEntryProductSelect();
+            
+            // نمایش لیست موقت
+            document.getElementById('temp-list').classList.remove('hidden');
+            renderTempEntryItems();
+            
+            showToast('محصول به لیست ورودی اضافه شد');
+            log('=== پایان تابع testAdd ===');
+        }
+        
+        function checkFunctions() {
+            log('=== بررسی توابع ===');
+            log('تابع showToast: ' + typeof showToast);
+            log('تابع formatPersianDate: ' + typeof formatPersianDate);
+            log('تابع updateEntryProductSelect: ' + typeof updateEntryProductSelect);
+            log('تابع clearEntryForm: ' + typeof clearEntryForm);
+            log('تابع renderTempEntryItems: ' + typeof renderTempEntryItems);
+            log('تابع testAdd: ' + typeof testAdd);
+            log('متغیر products: ' + products.length);
+            log('متغیر tempEntryItems: ' + tempEntryItems.length);
+        }
+        
+        // تست خودکار
+        window.onload = function() {
+            log('صفحه بارگذاری شد');
+            checkFunctions();
+            log('تست خودکار اجرا شد');
+        };
+    </script>
+</body>
+</html>

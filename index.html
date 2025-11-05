@@ -1449,6 +1449,29 @@
             }
         }
 
+        // توابع مدیریت آیتم‌های موقت ورودی
+        function renderTempEntryItems() {
+            const tbody = document.getElementById('entry-temp-body');
+            tbody.innerHTML = tempEntryItems.map((item, index) => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatPersianDate(item.invoiceDate)}</td>
+                    <td><button class="btn btn-danger" onclick="removeTempEntryItem(${index})">🗑️ حذف</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function removeTempEntryItem(index) {
+            tempEntryItems.splice(index, 1);
+            if (tempEntryItems.length === 0) {
+                document.getElementById('entry-temp-list').classList.add('hidden');
+            } else {
+                renderTempEntryItems();
+            }
+        }
+
         // مدیریت ورودی
         function addEntry(targetInvoiceId = null) {
             const select = document.getElementById('entry-product-select').value;
@@ -1542,27 +1565,7 @@
             }
         }
 
-        function renderTempEntryItems() {
-            const tbody = document.getElementById('entry-temp-body');
-            tbody.innerHTML = tempEntryItems.map((item, index) => `
-                <tr>
-                    <td>${item.name}</td>
-                    <td>${item.color}</td>
-                    <td>${item.quantity}</td>
-                    <td>${formatPersianDate(item.invoiceDate)}</td>
-                    <td><button class="btn btn-danger" onclick="removeTempEntryItem(${index})">🗑️ حذف</button></td>
-                </tr>
-            `).join('');
-        }
 
-        function removeTempEntryItem(index) {
-            tempEntryItems.splice(index, 1);
-            if (tempEntryItems.length === 0) {
-                document.getElementById('entry-temp-list').classList.add('hidden');
-            } else {
-                renderTempEntryItems();
-            }
-        }
 
         function saveEntry() {
             if (tempEntryItems.length === 0) return;
