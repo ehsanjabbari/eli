@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست کامل تاریخ شمسی سیستم انبارداری</title>
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@latest/dist/persian-date.min.js"></script>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background: #f5f5f5;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .date-display {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .invoice-preview {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 تست کامل سیستم تاریخ شمسی</h1>
+        <p><strong>وضعیت سرور:</strong> <span class="success">✅ فعال</span> - پورت 8006</p>
+        <p><strong>کتابخانه Persian Date:</strong> <span id="library-status"></span></p>
+        <p><strong>سیستم اصلی:</strong> <a href="index.html" target="_blank">مشاهده سیستم انبارداری</a></p>
+    </div>
+
+    <div class="container">
+        <h2>📅 تست توابع تاریخ</h2>
+        <div id="function-tests"></div>
+    </div>
+
+    <div class="container">
+        <h2>📋 نمونه فاکتور با تاریخ شمسی</h2>
+        <div id="invoice-preview"></div>
+    </div>
+
+    <script>
+        // تابع formatPersianDate (همانند سیستم اصلی)
+        function formatPersianDate(dateString) {
+            if (!dateString) return new Date().toLocaleDateString('fa-IR');
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fa-IR');
+        }
+
+        // تست‌های تابع
+        const testCases = [
+            { input: '2024-12-01', desc: 'تاریخ دسامبر 2024' },
+            { input: '2024-01-15', desc: 'تاریخ ژانویه 2024' },
+            { input: new Date().toISOString().split('T')[0], desc: 'تاریخ امروز (ISO)' },
+            { input: null, desc: 'بدون تاریخ (امروز)' }
+        ];
+
+        function runTests() {
+            const results = testCases.map(test => {
+                const result = formatPersianDate(test.input);
+                return `
+                    <div class="date-display">
+                        <strong>${test.desc}:</strong> ${result}
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('function-tests').innerHTML = results;
+        }
+
+        function checkLibrary() {
+            const status = typeof PersianDate !== 'undefined' ? 
+                '<span class="success">✅ بارگذاری شده</span>' : 
+                '<span class="error">❌ بارگذاری نشده</span>';
+            document.getElementById('library-status').innerHTML = status;
+        }
+
+        function showInvoicePreview() {
+            const sampleInvoices = [
+                {
+                    id: 1,
+                    date: '2024-12-01',
+                    items: [
+                        { name: 'کفش کتانی زنانه ورزشی', color: 'سفید', quantity: 5 },
+                        { name: 'کفش مجلسی پاشنه بلند', color: 'سیاه', quantity: 3 }
+                    ]
+                },
+                {
+                    id: 2,
+                    date: '2024-11-25',
+                    items: [
+                        { name: 'صندل تابستانی', color: 'رنگارنگ', quantity: 10 }
+                    ]
+                }
+            ];
+
+            const invoiceHTML = sampleInvoices.map(invoice => `
+                <div class="invoice-preview">
+                    <h3>فاکتور ورودی #${invoice.id}</h3>
+                    <p><strong>تاریخ:</strong> ${formatPersianDate(invoice.date)}</p>
+                    <p><strong>محصولات:</strong></p>
+                    <ul>
+                        ${invoice.items.map(item => 
+                            `<li>${item.name} - ${item.color} (${item.quantity} عدد)</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+            `).join('');
+
+            document.getElementById('invoice-preview').innerHTML = invoiceHTML;
+        }
+
+        // اجرای تست‌ها
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLibrary();
+            runTests();
+            showInvoicePreview();
+            
+            console.log('🎯 تست‌های تاریخ شمسی انجام شد');
+            console.log('📅 تاریخ امروز:', formatPersianDate(null));
+        });
+    </script>
+</body>
+</html>

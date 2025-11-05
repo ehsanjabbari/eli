@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست تاریخ شمسی</title>
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@latest/dist/persian-date.min.js"></script>
+</head>
+<body>
+    <h1>تست تاریخ شمسی</h1>
+    
+    <div>
+        <h2>تست تابع formatPersianDate</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // تست تابع formatPersianDate
+        function formatPersianDate(dateString) {
+            if (!dateString) return new Date().toLocaleDateString('fa-IR');
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fa-IR');
+        }
+
+        // تست تابع persianDateToInput
+        function persianDateToInput(dateString) {
+            if (!dateString) return new Date().toISOString().split('T')[0];
+            return dateString;
+        }
+
+        // اجرای تست‌ها
+        const testCases = [
+            '2024-01-15',
+            '2024-12-25',
+            '2025-01-01',
+            null,
+            ''
+        ];
+
+        let results = '<h3>نتایج تست:</h3>';
+        testCases.forEach((date, index) => {
+            const formatted = formatPersianDate(date);
+            const input = persianDateToInput(date);
+            results += `<p><strong>تست ${index + 1}:</strong></p>`;
+            results += `<p>ورودی: ${date || '(خالی)'}</p>`;
+            results += `<p>فرمت شمسی: ${formatted}</p>`;
+            results += `<p>فرمت ورودی: ${input}</p>`;
+            results += `<hr>`;
+        });
+
+        document.getElementById('test-results').innerHTML = results;
+
+        // نمایش تاریخ امروز
+        const today = new Date();
+        const persianToday = today.toLocaleDateString('fa-IR');
+        results += `<h3>تاریخ امروز:</h3>`;
+        results += `<p>میلادی: ${today.toDateString()}</p>`;
+        results += `<p>شمسی: ${persianToday}</p>`;
+        
+        document.getElementById('test-results').innerHTML = results;
+    </script>
+</body>
+</html>

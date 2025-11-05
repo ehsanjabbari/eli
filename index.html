@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/persian-date@latest/dist/persian-date.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1412,6 +1413,19 @@
             }, 3000);
         }
 
+        // تابع تبدیل تاریخ به فرمت شمسی
+        function formatPersianDate(dateString) {
+            if (!dateString) return new Date().toLocaleDateString('fa-IR');
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fa-IR');
+        }
+
+        // تابع تبدیل تاریخ شمسی به فرمت ورودی HTML
+        function persianDateToInput(dateString) {
+            if (!dateString) return new Date().toISOString().split('T')[0];
+            return dateString;
+        }
+
         // تابع نمایش آیتم‌های فاکتور (معمولی یا قابل ویرایش)
         function renderInvoiceItems(items, type, invoiceIndex) {
             if (editingInvoice?.type === type && editingInvoice?.index === invoiceIndex) {
@@ -1448,7 +1462,7 @@
             const color = document.getElementById('entry-product-color').value.trim();
             const quantity = parseInt(document.getElementById('entry-quantity').value);
             const rawDate = document.getElementById('entry-invoice-date').value;
-            const invoiceDate = rawDate ? inputDateToPersian(rawDate) : getTodayPersian();
+            const invoiceDate = rawDate || new Date().toISOString().split('T')[0];
 
             if (!name || !color || quantity <= 0) {
                 showToast('لطفاً تمام فیلدها را پر کنید', 'error');
@@ -1685,7 +1699,7 @@
             // بروزرسانی تاریخ
             const dateInput = document.getElementById(`edit-invoice-date-${type}-${index}`);
             if (dateInput) {
-                invoice.date = dateInput.value ? inputDateToPersian(dateInput.value) : invoice.date;
+                invoice.date = dateInput.value || invoice.date;
             }
 
             // اعتبارسنجی فروش بر اساس موجودی
@@ -2071,23 +2085,11 @@
             return `${year}/${month}/${day}`;
         }
         
-        // تابع کمکی برای نمایش تاریخ شمسی
-        function formatPersianDate(dateValue) {
-            if (!dateValue) return '';
-            
-            // اگر فرمت شمسی باشد (1404/08/13)، مستقیماً برگردان
-            if (typeof dateValue === 'string' && dateValue.includes('/')) {
-                return dateValue;
-            }
-            
-            // اگر فرمت میلادی باشد، به شمسی تبدیل کن
-            const date = new Date(dateValue);
-            return convertGregorianToPersian(date);
-        }
-        
         // تابع کمکی برای تبدیل تاریخ شمسی به فرمت ورودی
         function persianDateToInput(dateString) {
-            if (!dateString) return '';
+            if (!dateString) return new Date().toISOString().split('T')[0];
+            return dateString;
+        }
             
             // اگر فرمت شمسی باشد (1404/08/13)، تبدیل به فرمت ورودی
             if (dateString.includes('/')) {
@@ -2116,9 +2118,8 @@
         }
 
         function setDefaultInvoiceDate() {
-            const todayString = getTodayPersian();
-            const inputFormat = persianDateToInput(todayString);
-            document.getElementById('entry-invoice-date').value = inputFormat;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('entry-invoice-date').value = today;
         }
         
         // ========== مدیریت فروش ۱۵۱ ==========
